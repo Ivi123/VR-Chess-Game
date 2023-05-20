@@ -211,7 +211,7 @@ public class Chessboard : MonoBehaviour
             chessPiece.currentY = newPosition.y;
             
             chessPiece.SavePosition();
-            chessPiece.IsTouched = true;
+            chessPiece.IsMoved = true;
         }
 
         Task.Run(() => EnablePickUpOnPieces());
@@ -221,9 +221,9 @@ public class Chessboard : MonoBehaviour
     {
         foreach (var piece in chessPieces)
         {
-            if (!piece.Equals(pickedPiece))
+            if (piece != null && !piece.Equals(pickedPiece))
             {
-                piece.transform.parent.GetComponent<XRGrabInteractable>().enabled = false;
+                piece.transform.parent.GetComponent<MeshCollider>().enabled = false;
             }
         }
     }
@@ -232,7 +232,10 @@ public class Chessboard : MonoBehaviour
     {
         foreach (var piece in chessPieces)
         {
-            piece.transform.parent.GetComponent<XRGrabInteractable>().enabled = true;
+            if (piece != null) 
+            { 
+                piece.transform.parent.GetComponent<MeshCollider>().enabled = true; 
+            }
         }
     }
 
@@ -250,10 +253,17 @@ public class Chessboard : MonoBehaviour
 
     public bool IsSpaceOccupied(Vector2Int position)
     {
-        if(chessPieces[position.x, position.y] != null)
+        ChessPiece chessPiece;
+        try
+        {
+            chessPiece = chessPieces[position.x, position.y];
+        }
+        catch
         {
             return true;
         }
-        return false;
+
+        return chessPiece != null;
     }
+
 }

@@ -7,7 +7,6 @@ public class TileDetector : MonoBehaviour
     //--------------------------------------------------------- VARIABLES ----------------------------------------------------------
 
     private ChessPiece chessPiece;
-
     public ChessPiece ChessPiece { get => chessPiece; set => chessPiece = value; }
 
     //---------------------------------------------------------- METHODS ----------------------------------------------------------
@@ -32,11 +31,11 @@ public class TileDetector : MonoBehaviour
         if (hoveredTile != null && hoveredTile.IsAvailableTile)
         {
             hoveredTile.ExitedTriggeredAvailableMove();
-        }
+            if (hoveredTile.Equals(chessPiece.HoveringTile))
+            {
+                chessPiece.HoveringTile = null;
 
-        if(hoveredTile != null && hoveredTile.Equals(chessPiece.HoveringTile) && hoveredTile.IsAvailableTile)
-        {
-            chessPiece.HoveringTile = null;
+            }
         }
     }
 }

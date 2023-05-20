@@ -6,6 +6,13 @@ public class Rook : ChessPiece
 {
     public override List<Vector2Int> CalculateAvailablePositions()
     {
-        throw new System.NotImplementedException();
+        List<Vector2Int> possibleMoves = new();
+        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0));
+        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1));
+        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0));
+        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1));
+
+        return possibleMoves;
     }
+
 }

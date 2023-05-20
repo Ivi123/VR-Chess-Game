@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Shared;
 
 public enum ChessPieceType
 {
@@ -16,7 +15,7 @@ public enum ChessPieceType
 
 public abstract class ChessPiece : MonoBehaviour
 {
-    public TeamType team;
+    public Shared.TeamType team;
     public int currentX;
     public int currentY;
     public ChessPieceType type;
@@ -27,12 +26,12 @@ public abstract class ChessPiece : MonoBehaviour
 
     // Logic
     private Quaternion desiredRotation;
-    private Vector3 initialPosition;
+    private Vector3 position;
     private Tile hoveringTile;
     private Chessboard chessboard; 
-    protected bool isTouched = false;
+    protected bool isMoved = false;
 
-    public bool IsTouched { get => isTouched; set => isTouched = value; }
+    public bool IsMoved { get => isMoved; set => isMoved = value; }
     public Tile HoveringTile { get => hoveringTile; set => hoveringTile = value; }
     public Chessboard Chessboard { get => chessboard; set => chessboard = value; }
 
@@ -40,25 +39,24 @@ public abstract class ChessPiece : MonoBehaviour
 
     public void PickPiece()
     {
-        transform.Find(TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = true;
+        transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = true;
         chessboard.PieceWasPickedUp(currentX, currentY);
         transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
     }
 
     public void PlacePiece()
     {
-        transform.Find(TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = false;
+        transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = false;
         chessboard.PieceWasDropped(currentX, currentY, hoveringTile);
 
-        transform.SetPositionAndRotation(initialPosition, desiredRotation);
+        transform.SetPositionAndRotation(position, desiredRotation);
         transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
-        SavePosition();
     }
 
     public void SavePosition()
     {
         var transform = GetComponent<Transform>().transform;
-        initialPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+        position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
     }
 
     public void SaveOrientation()
