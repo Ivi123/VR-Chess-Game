@@ -4,8 +4,9 @@ using UnityEngine;
 
 public class Knight : ChessPiece
 {
-    public override List<Vector2Int> CalculateAvailablePositions()
+    public override Moves CalculateAvailablePositions()
     {
+        Moves moves = new();
         int direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
         Vector2Int horseForwardMove_1 = new(currentX + (direction * 2), currentY + 1);
@@ -23,6 +24,20 @@ public class Knight : ChessPiece
         List<Vector2Int> possibleMoves = new() { horseForwardMove_1, horseForwardMove_2, horseBackwardMove_1, horseBackwardMove_2, 
             horseLeftMove_1, horseLeftMove_2, horseRightMove_1, horseRightMove_2 };
 
-        return possibleMoves.FindAll(move => !Chessboard.IsSpaceOccupied(move));
+        possibleMoves.ForEach(move =>
+        {
+            var occupationType = Chessboard.CalculateSpaceOccupation(move, team);
+            switch (occupationType)
+            {
+                case Shared.TileOccuppiedBy.None:
+                    moves.AvailableMoves.Add(move);
+                    break;
+                case Shared.TileOccuppiedBy.EnemyPiece:
+                    moves.AttackMoves.Add(move);
+                    break;
+            }
+        });
+
+        return moves;
     }
 }

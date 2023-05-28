@@ -70,5 +70,5 @@ public abstract class ChessPiece : MonoBehaviour
         GetComponent<MeshRenderer>().material = Material;
     }
 
-    public abstract List<Vector2Int> CalculateAvailablePositions();
+    public abstract Moves CalculateAvailablePositions();
 }

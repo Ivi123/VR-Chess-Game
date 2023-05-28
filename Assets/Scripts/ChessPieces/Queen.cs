@@ -4,18 +4,19 @@ using UnityEngine;
 
 public class Queen : ChessPiece
 {
-    public override List<Vector2Int> CalculateAvailablePositions()
+    public override Moves CalculateAvailablePositions()
     {
-        List<Vector2Int> possibleMoves = new();
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1));
+        Moves moves = new();
 
-        return possibleMoves;
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1);
+
+        return moves;
     }
 }

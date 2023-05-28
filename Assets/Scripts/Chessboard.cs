@@ -1,13 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
 
+/// <summary>
+/// Defines the <see cref="Chessboard" />.
+/// </summary>
 public class Chessboard : MonoBehaviour
 {
-
     [Header("Art stuff")]
     private float tileSize = 0.120f;
     public float yOffset;
@@ -24,9 +22,11 @@ public class Chessboard : MonoBehaviour
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] tiles;
     public Vector3 bounds;
+    private Moves moves;
 
-    private List<Vector2Int> availableMoves;
-
+    /// <summary>
+    /// The Awake.
+    /// </summary>
     private void Awake()
     {
         boardCenter = new Vector3(transform.position.x * -1, 0, transform.position.z * -1);
@@ -36,23 +36,49 @@ public class Chessboard : MonoBehaviour
         PositionAllPieces();
     }
 
+    /// <summary>
+    /// The Update.
+    /// </summary>
     private void Update()
     {
-
     }
 
+    /// <summary>
+    /// The GenerateAllTiles.
+    /// </summary>
+    /// <param name="tileSize">The tileSize<see cref="float"/>.</param>
+    /// <param name="tileCountX">The tileCountX<see cref="int"/>.</param>
+    /// <param name="tileCountY">The tileCountY<see cref="int"/>.</param>
     private void GenerateAllTiles(float tileSize, int tileCountX, int tileCountY)
     {
         yOffset += transform.position.y;
         bounds = new Vector3((tileCountX / 2) * tileSize, 0, (tileCountX / 2) * tileSize) + boardCenter;
 
         tiles = new GameObject[tileCountX, tileCountY];
+        //To easily determine the type of the generated tile we add the bool isTileTypeWhite and set it to true.
+        // For each x iteration we negate the type as each new row starts with what the previous row ended
+        // For each y iteration we negate the type as the adjacent tile should be of a different type.
+        bool isTileTypeWhite = true;
         for (int x = 0; x < tileCountX; x++)
+        {
+            isTileTypeWhite = !isTileTypeWhite;
             for (int y = 0; y < tileCountY; y++)
-                tiles[x, y] = GenerateSingleTile(tileSize, x, y);
+            {
+                tiles[x, y] = GenerateSingleTile(tileSize, x, y, isTileTypeWhite);
+                isTileTypeWhite = !isTileTypeWhite;
+            }
+        }
     }
 
-    private GameObject GenerateSingleTile(float tileSize, int x, int y)
+    /// <summary>
+    /// The GenerateSingleTile.
+    /// </summary>
+    /// <param name="tileSize">The tileSize<see cref="float"/>.</param>
+    /// <param name="x">The x<see cref="int"/>.</param>
+    /// <param name="y">The y<see cref="int"/>.</param>
+    /// <param name="isTileWhite">The isTileWhite<see cref="bool"/>.</param>
+    /// <returns>The <see cref="GameObject"/>.</returns>
+    private GameObject GenerateSingleTile(float tileSize, int x, int y, bool isTileWhite)
     {
 
         GameObject tileObject = new GameObject(string.Format("Tile: X:{0}, Y:{1}", x, y));
@@ -60,6 +86,7 @@ public class Chessboard : MonoBehaviour
 
         tileObject.AddComponent<Tile>();
         tileObject.GetComponent<Tile>().Position = new Vector2Int(x, y);
+        tileObject.GetComponent<Tile>().IsWhiteTile = isTileWhite;
 
         Mesh mesh = new Mesh();
         tileObject.AddComponent<MeshFilter>().mesh = mesh;
@@ -85,7 +112,9 @@ public class Chessboard : MonoBehaviour
         return tileObject;
     }
 
-    //Spawning the pieces
+    /// <summary>
+    /// The SpawnAllPieces.
+    /// </summary>
     private void SpawnAllPieces()
     {
         chessPieces = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
@@ -119,6 +148,12 @@ public class Chessboard : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// The SpawnSinglePiece.
+    /// </summary>
+    /// <param name="type">The type<see cref="ChessPieceType"/>.</param>
+    /// <param name="team">The team<see cref="Shared.TeamType"/>.</param>
+    /// <returns>The <see cref="ChessPiece"/>.</returns>
     private ChessPiece SpawnSinglePiece(ChessPieceType type, Shared.TeamType team)
     {
         GameObject cpGameObject = Instantiate(prefabs[(int)type - 1], transform);
@@ -134,6 +169,10 @@ public class Chessboard : MonoBehaviour
         return cp;
     }
 
+    /// <summary>
+    /// The AddTileDetector.
+    /// </summary>
+    /// <param name="cpGameObject">The cpGameObject<see cref="GameObject"/>.</param>
     private void AddTileDetector(GameObject cpGameObject)
     {
         GameObject cpTileDetector = new GameObject(Shared.TileDetectorName);
@@ -150,16 +189,23 @@ public class Chessboard : MonoBehaviour
         tileDetectorBoxColider.enabled = false;
     }
 
-    //Positioning
+    /// <summary>
+    /// The PositionAllPieces.
+    /// </summary>
     private void PositionAllPieces()
     {
         for (int x = 0; x < TILE_COUNT_X; x++)
             for (int y = 0; y < TILE_COUNT_Y; y++)
                 if (chessPieces[x, y] != null)
                     PositionSinglePiece(x, y, true);
-
     }
 
+    /// <summary>
+    /// The PositionSinglePiece.
+    /// </summary>
+    /// <param name="x">The x<see cref="int"/>.</param>
+    /// <param name="y">The y<see cref="int"/>.</param>
+    /// <param name="force">The force<see cref="bool"/>.</param>
     private void PositionSinglePiece(int x, int y, bool force = false)
     {
         chessPieces[x, y].currentX = x;
@@ -171,33 +217,77 @@ public class Chessboard : MonoBehaviour
         chessPieces[x, y].SaveOrientation();
     }
 
+    /// <summary>
+    /// The GetTileCenter.
+    /// </summary>
+    /// <param name="x">The x<see cref="int"/>.</param>
+    /// <param name="y">The y<see cref="int"/>.</param>
+    /// <returns>The <see cref="Vector3"/>.</returns>
     private Vector3 GetTileCenter(int x, int y)
     {
         return new Vector3(x * tileSize, yOffset, y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
     }
 
-    //Operations
+    /// <summary>
+    /// The PieceWasPickedUp.
+    /// </summary>
+    /// <param name="x">The x<see cref="int"/>.</param>
+    /// <param name="y">The y<see cref="int"/>.</param>
     public void PieceWasPickedUp(int x, int y)
     {
         tiles[x, y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Selected)];
-        availableMoves = chessPieces[x, y].CalculateAvailablePositions();
-        foreach (var move in availableMoves)
+        moves = chessPieces[x, y].CalculateAvailablePositions();
+        foreach (var move in moves.AvailableMoves)
         {
-            tiles[move.x, move.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Available)];
-            tiles[move.x, move.y].GetComponent<Tile>().IsAvailableTile = true;
+            var moveToTile = tiles[move.x, move.y];
+            if (moveToTile.GetComponent<Tile>().IsWhiteTile)
+            {
+                moveToTile.GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AvailableWhite)];
+            }
+            else
+            {
+                moveToTile.GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AvailableBlack)];
+            }
+            moveToTile.GetComponent<Tile>().IsAvailableTile = true;
         }
-        Task.Run(() => DisablePickUpOnOtherPieces(chessPieces[x, y]));
+
+        foreach (var move in moves.AttackMoves)
+        {
+            var moveToTile = tiles[move.x, move.y];
+            if (moveToTile.GetComponent<Tile>().IsWhiteTile)
+            {
+                moveToTile.GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AttackTileWhite)];
+            }
+            else
+            {
+                moveToTile.GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AttackTileBlack)];
+            }
+        }
+
+        DisablePickUpOnOtherPieces(chessPieces[x, y]);
     }
 
+    /// <summary>
+    /// The PieceWasDropped.
+    /// </summary>
+    /// <param name="currentX">The currentX<see cref="int"/>.</param>
+    /// <param name="currentY">The currentY<see cref="int"/>.</param>
+    /// <param name="newTile">The newTile<see cref="Tile"/>.</param>
     public void PieceWasDropped(int currentX, int currentY, Tile newTile)
     {
         tiles[currentX, currentY].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Default)];
-        foreach (var move in availableMoves)
+        foreach (var move in moves.AvailableMoves)
         {
             tiles[move.x, move.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Default)];
             tiles[move.x, move.y].GetComponent<Tile>().IsAvailableTile = false;
         }
-        availableMoves = null;
+
+        foreach (var move in moves.AttackMoves)
+        {
+            tiles[move.x, move.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Default)];
+        }
+
+        moves = null;
 
         if (newTile != null)
         {
@@ -209,36 +299,48 @@ public class Chessboard : MonoBehaviour
             chessPieces[currentX, currentY] = null;
             chessPiece.currentX = newPosition.x;
             chessPiece.currentY = newPosition.y;
-            
+
             chessPiece.SavePosition();
             chessPiece.IsMoved = true;
         }
 
-        Task.Run(() => EnablePickUpOnPieces());
+        EnablePickUpOnPieces();
     }
 
+    /// <summary>
+    /// The DisablePickUpOnOtherPieces.
+    /// </summary>
+    /// <param name="pickedPiece">The pickedPiece<see cref="ChessPiece"/>.</param>
     public void DisablePickUpOnOtherPieces(ChessPiece pickedPiece)
     {
         foreach (var piece in chessPieces)
         {
             if (piece != null && !piece.Equals(pickedPiece))
             {
-                piece.transform.parent.GetComponent<MeshCollider>().enabled = false;
+                piece.GetComponent<XRGrabInteractable>().enabled = false;
             }
         }
     }
 
+    /// <summary>
+    /// The EnablePickUpOnPieces.
+    /// </summary>
     public void EnablePickUpOnPieces()
     {
         foreach (var piece in chessPieces)
         {
-            if (piece != null) 
-            { 
-                piece.transform.parent.GetComponent<MeshCollider>().enabled = true; 
+            if (piece != null)
+            {
+                piece.GetComponent<XRGrabInteractable>().enabled = true;
             }
         }
     }
 
+    /// <summary>
+    /// The HandleTileTrigger.
+    /// </summary>
+    /// <param name="possition">The possition<see cref="Vector2Int"/>.</param>
+    /// <param name="enterTrigger">The enterTrigger<see cref="bool"/>.</param>
     public void HandleTileTrigger(Vector2Int possition, bool enterTrigger)
     {
         if (enterTrigger)
@@ -247,11 +349,26 @@ public class Chessboard : MonoBehaviour
         }
         else
         {
-            tiles[possition.x, possition.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.Available)];
+            var tile = tiles[possition.x, possition.y];
+            if (tile.GetComponent<Tile>().IsWhiteTile)
+            {
+                tiles[possition.x, possition.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AvailableWhite)];
+            }
+            else
+            {
+                tiles[possition.x, possition.y].GetComponent<MeshRenderer>().material = tilesMaterials[((int)Shared.TileType.AvailableBlack)];
+            }
         }
     }
 
-    public bool IsSpaceOccupied(Vector2Int position)
+    /// <summary>
+    /// Will calculate the occupation status of a tile by checking if we have a piece or not on a given possition. It will also
+    /// take into consideration whether a tile is occupied by a friendly or an enemy piece.
+    /// </summary>
+    /// <param name="position">position to be checked.</param>
+    /// <param name="selectedPieceTeam">selected piece team.</param>
+    /// <returns>The <see cref="Shared.TileOccuppiedBy"/>.</returns>
+    public Shared.TileOccuppiedBy CalculateSpaceOccupation(Vector2Int position, Shared.TeamType selectedPieceTeam)
     {
         ChessPiece chessPiece;
         try
@@ -260,10 +377,14 @@ public class Chessboard : MonoBehaviour
         }
         catch
         {
-            return true;
+            return Shared.TileOccuppiedBy.EndOfTable;
         }
 
-        return chessPiece != null;
-    }
+        if (chessPiece == null)
+        {
+            return Shared.TileOccuppiedBy.None;
+        }
 
+        return selectedPieceTeam.Equals(chessPiece.team) ? Shared.TileOccuppiedBy.FriendlyPiece : Shared.TileOccuppiedBy.EnemyPiece;
+    }
 }

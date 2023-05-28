@@ -10,8 +10,19 @@ public class Shared
     {
         Default,
         Selected,
-        Available,
-        MoveTo
+        AvailableBlack,
+        AvailableWhite,
+        MoveTo,
+        AttackTileBlack,
+        AttackTileWhite
+    }
+
+    public enum TileOccuppiedBy
+    {
+        EndOfTable,
+        FriendlyPiece,
+        EnemyPiece,
+        None
     }
 
     public enum TeamType
@@ -20,28 +31,35 @@ public class Shared
         Black
     }
 
-    public static List<Vector2Int> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece chessPiece, int stepX, int stepY)
+    public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)
     {
         List<Vector2Int> possibleMoves = new();
 
         while (true)
         {
-            Vector2Int lastAddedMove = 
-                possibleMoves.Count == 0 
-                    ? new(chessPiece.currentX, chessPiece.currentY) 
+            Vector2Int lastAddedMove =
+                possibleMoves.Count == 0
+                    ? new(chessPiece.currentX, chessPiece.currentY)
                     : possibleMoves[possibleMoves.Count - 1];
-            
-            Vector2Int PossibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY) ;
 
-            if (chessPiece.Chessboard.IsSpaceOccupied(PossibleMove))
+            Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
+            var occupationType = chessPiece.Chessboard.CalculateSpaceOccupation(possibleMove, chessPiece.team);
+
+            if (TileOccuppiedBy.FriendlyPiece == occupationType || TileOccuppiedBy.EndOfTable == occupationType)
             {
                 break;
             }
 
-            possibleMoves.Add(PossibleMove);
+            if(TileOccuppiedBy.EnemyPiece == occupationType)
+            {
+                moves.AttackMoves.Add(possibleMove);
+                break;
+            }
+
+            moves.AvailableMoves.Add(possibleMove);
+            possibleMoves.Add(possibleMove);
         }
 
-        return possibleMoves;
     }
 
 }

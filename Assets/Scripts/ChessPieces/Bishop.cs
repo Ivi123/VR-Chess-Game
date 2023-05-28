@@ -4,15 +4,15 @@ using UnityEngine;
 
 public class Bishop : ChessPiece
 {
-    public override List<Vector2Int> CalculateAvailablePositions()
+    public override Moves CalculateAvailablePositions()
     {
-        List<Vector2Int> possibleMoves = new();
+        Moves moves = new();
 
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1));
-        possibleMoves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1));
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1);
+        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1);
 
-        return possibleMoves;
+        return moves;
     }
 }
