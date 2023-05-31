@@ -14,7 +14,7 @@ public class TeleportPlayer : MonoBehaviour
 
     public void Teleport()
     {
-        if(anchor && provider)
+        if (anchor && provider)
         {
             TeleportRequest request = CreateRequest();
             provider.QueueTeleportRequest(request);

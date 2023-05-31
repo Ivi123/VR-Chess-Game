@@ -10,6 +10,6 @@ public class RemoveObjectsWithTag : MonoBehaviour
         GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(tag);
 
         foreach (GameObject targetObject in taggedObjects)
-            Destroy(targetObject);  
+            Destroy(targetObject);
     }
 }

@@ -1,41 +1,47 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Defines the <see cref="TileDetector" />.
+/// </summary>
 public class TileDetector : MonoBehaviour
 {
     //--------------------------------------------------------- VARIABLES ----------------------------------------------------------
 
-    private ChessPiece chessPiece;
-    public ChessPiece ChessPiece { get => chessPiece; set => chessPiece = value; }
+    public ChessPiece ChessPiece { get; set; }
 
     //---------------------------------------------------------- METHODS ----------------------------------------------------------
 
     public void OnTriggerEnter(Collider other)
     {
         Tile hoveredTile = other.gameObject.GetComponent<Tile>();
-        if (hoveredTile != null && hoveredTile.IsAvailableTile)
-        {
-            chessPiece.HoveringTile = hoveredTile;
-            hoveredTile.TriggeredAvailableMove();
-        }
-        else if (hoveredTile != null)
-        {
-            chessPiece.HoveringTile = null;
-        }
+        if (hoveredTile == null) return;
+
+        Shared.MoveType moveType =
+            hoveredTile.IsAvailableTile ? Shared.MoveType.Normal
+            : hoveredTile.IsAttackTile ? Shared.MoveType.Attack
+            : Shared.MoveType.None;
+        if (moveType == Shared.MoveType.None) return;
+        
+        ChessPiece.HoveringTile = hoveredTile;
+        hoveredTile.TriggeredAvailableMove(moveType);
     }
 
     public void OnTriggerExit(Collider other)
     {
         Tile hoveredTile = other.gameObject.GetComponent<Tile>();
-        if (hoveredTile != null && hoveredTile.IsAvailableTile)
-        {
-            hoveredTile.ExitedTriggeredAvailableMove();
-            if (hoveredTile.Equals(chessPiece.HoveringTile))
-            {
-                chessPiece.HoveringTile = null;
+        if (hoveredTile == null) return;
 
-            }
+        if (hoveredTile.IsAvailableTile)
+        {
+            hoveredTile.ExitedTriggeredAvailableMove(Shared.MoveType.Normal);
+        } else if (hoveredTile.IsAttackTile)
+        {
+            hoveredTile.ExitedTriggeredAvailableMove(Shared.MoveType.Attack);
+        }
+
+        if (hoveredTile.Equals(ChessPiece.HoveringTile))
+        {
+            ChessPiece.HoveringTile = null;
         }
     }
 }

@@ -34,7 +34,7 @@ public class ChangeMaterial : MonoBehaviour
     {
         usingOther = !usingOther;
 
-        if(usingOther)
+        if (usingOther)
         {
             meshRenderer.material = otherMaterial;
         }

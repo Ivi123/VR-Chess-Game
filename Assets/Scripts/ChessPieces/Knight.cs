@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -21,18 +20,27 @@ public class Knight : ChessPiece
         Vector2Int horseRightMove_1 = new(currentX + (direction * 1), currentY - 2);
         Vector2Int horseRightMove_2 = new(currentX + (direction * 1), currentY - 2);
 
-        List<Vector2Int> possibleMoves = new() { horseForwardMove_1, horseForwardMove_2, horseBackwardMove_1, horseBackwardMove_2, 
-            horseLeftMove_1, horseLeftMove_2, horseRightMove_1, horseRightMove_2 };
+        List<Vector2Int> possibleMoves = new()
+        {
+            horseForwardMove_1,
+            horseForwardMove_2,
+            horseBackwardMove_1,
+            horseBackwardMove_2,
+            horseLeftMove_1,
+            horseLeftMove_2,
+            horseRightMove_1,
+            horseRightMove_2
+        };
 
         possibleMoves.ForEach(move =>
         {
-            var occupationType = Chessboard.CalculateSpaceOccupation(move, team);
+            var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
             switch (occupationType)
             {
-                case Shared.TileOccuppiedBy.None:
+                case Shared.TileOccupiedBy.None:
                     moves.AvailableMoves.Add(move);
                     break;
-                case Shared.TileOccuppiedBy.EnemyPiece:
+                case Shared.TileOccupiedBy.EnemyPiece:
                     moves.AttackMoves.Add(move);
                     break;
             }

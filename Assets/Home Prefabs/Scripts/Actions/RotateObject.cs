@@ -15,7 +15,7 @@ public class RotateObject : MonoBehaviour
 
     public void SetIsRotating(bool value)
     {
-        if(value)
+        if (value)
         {
             Begin();
         }

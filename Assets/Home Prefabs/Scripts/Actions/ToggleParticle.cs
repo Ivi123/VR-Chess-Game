@@ -26,7 +26,7 @@ public class ToggleParticle : MonoBehaviour
 
     public void PlayWithExclusivity(MonoBehaviour owner)
     {
-        if(currentOwner == null)
+        if (currentOwner == null)
         {
             currentOwner = this;
             Play();
@@ -35,7 +35,7 @@ public class ToggleParticle : MonoBehaviour
 
     public void StopWithExclusivity(MonoBehaviour owner)
     {
-        if(currentOwner == this)
+        if (currentOwner == this)
         {
             currentOwner = null;
             Stop();
@@ -44,7 +44,7 @@ public class ToggleParticle : MonoBehaviour
 
     private void OnValidate()
     {
-        if(currentParticleSystem)
+        if (currentParticleSystem)
         {
             ParticleSystem.MainModule main = currentParticleSystem.main;
             main.playOnAwake = false;

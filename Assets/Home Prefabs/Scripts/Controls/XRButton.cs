@@ -70,7 +70,7 @@ public class XRButton : XRBaseInteractable
 
     public override void ProcessInteractable(XRInteractionUpdateOrder.UpdatePhase updatePhase)
     {
-        if(updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
+        if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
         {
             if (isHovered)
             {
@@ -110,11 +110,11 @@ public class XRButton : XRBaseInteractable
     {
         bool inPosition = InPosition();
 
-        if(inPosition != previousPress)
+        if (inPosition != previousPress)
         {
             previousPress = inPosition;
 
-            if(inPosition)
+            if (inPosition)
             {
                 OnPress.Invoke();
             }

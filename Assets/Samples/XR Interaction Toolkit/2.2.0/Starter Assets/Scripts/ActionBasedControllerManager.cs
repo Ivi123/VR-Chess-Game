@@ -80,7 +80,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         [SerializeField]
         [Tooltip("If true, continuous movement will be enabled. If false, teleport will enabled.")]
         bool m_SmoothMotionEnabled;
-        
+
         [SerializeField]
         [Tooltip("If true, continuous turn will be enabled. If false, snap turn will be enabled. Note: If smooth motion is enabled and enable strafe is enabled on the continuous move provider, turn will be overriden in favor of strafe.")]
         bool m_SmoothTurnEnabled;
@@ -232,7 +232,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
             // Enable direct selection
             if (m_DirectInteractor != null)
                 m_DirectInteractor.gameObject.SetActive(true);
-            
+
             // Re-enable the locomotion and turn actions
             UpdateLocomotionActions();
             UpdateTurnActions();
@@ -267,7 +267,7 @@ namespace UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets
         {
             TeardownInteractorEvents();
         }
-        
+
         IEnumerator OnAfterInteractionEvents()
         {
             // Avoid comparison to null each frame since that operation is somewhat expensive

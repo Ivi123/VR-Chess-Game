@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+using Managers;
 using UnityEngine;
 
 public enum ChessPieceType
@@ -21,33 +20,31 @@ public abstract class ChessPiece : MonoBehaviour
     public ChessPieceType type;
 
     // Art
-    private Material material;
-    public Material Material { get => material; set => material = value; }
+    public Material Material { get; set; }
 
     // Logic
     private Quaternion desiredRotation;
     private Vector3 position;
-    private Tile hoveringTile;
-    private Chessboard chessboard; 
     protected bool isMoved = false;
 
     public bool IsMoved { get => isMoved; set => isMoved = value; }
-    public Tile HoveringTile { get => hoveringTile; set => hoveringTile = value; }
-    public Chessboard Chessboard { get => chessboard; set => chessboard = value; }
+    public Tile HoveringTile { get; set; }
+    public Chessboard Chessboard { get; set; }
+    public MovementManager MovementManager { get; set; }
 
     //---------------------------------------------------- Methods ------------------------------------------------------
 
     public void PickPiece()
     {
         transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = true;
-        chessboard.PieceWasPickedUp(currentX, currentY);
+        MovementManager.PieceWasPickedUp(currentX, currentY);
         transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.None;
     }
 
     public void PlacePiece()
     {
         transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = false;
-        chessboard.PieceWasDropped(currentX, currentY, hoveringTile);
+        MovementManager.PieceWasDropped(currentX, currentY, HoveringTile);
 
         transform.SetPositionAndRotation(position, desiredRotation);
         transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
@@ -55,8 +52,8 @@ public abstract class ChessPiece : MonoBehaviour
 
     public void SavePosition()
     {
-        var transform = GetComponent<Transform>().transform;
-        position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+        var transformPosition = transform.position;
+        position = new Vector3(transformPosition.x, transformPosition.y, transformPosition.z);
     }
 
     public void SaveOrientation()

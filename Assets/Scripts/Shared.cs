@@ -1,10 +1,13 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Shared
+public static class Shared
 {
-    public static readonly string TileDetectorName = "TileDetector";
+    public const string TileDetectorName = "TileDetector";
+
+    public const string EliminationTileParentName = "EliminationTiles - DestroyOnLoad";
+    public const string WhiteEliminationTilesName = "White EliminationTiles";
+    public const string BlackEliminationTilesName = "Black EliminationTiles";
 
     public enum TileType
     {
@@ -14,10 +17,11 @@ public class Shared
         AvailableWhite,
         MoveTo,
         AttackTileBlack,
-        AttackTileWhite
+        AttackTileWhite,
+        HighlightAttack
     }
 
-    public enum TileOccuppiedBy
+    public enum TileOccupiedBy
     {
         EndOfTable,
         FriendlyPiece,
@@ -31,26 +35,33 @@ public class Shared
         Black
     }
 
+    public enum MoveType
+    {
+        Normal,
+        Attack,
+        None
+    }
+
     public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)
     {
         List<Vector2Int> possibleMoves = new();
 
         while (true)
         {
-            Vector2Int lastAddedMove =
+            var lastAddedMove =
                 possibleMoves.Count == 0
-                    ? new(chessPiece.currentX, chessPiece.currentY)
-                    : possibleMoves[possibleMoves.Count - 1];
+                    ? new Vector2Int(chessPiece.currentX, chessPiece.currentY)
+                    : possibleMoves[^1];
 
             Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
-            var occupationType = chessPiece.Chessboard.CalculateSpaceOccupation(possibleMove, chessPiece.team);
+            var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(possibleMove, chessPiece.team);
 
-            if (TileOccuppiedBy.FriendlyPiece == occupationType || TileOccuppiedBy.EndOfTable == occupationType)
+            if (occupationType is TileOccupiedBy.FriendlyPiece or TileOccupiedBy.EndOfTable)
             {
                 break;
             }
 
-            if(TileOccuppiedBy.EnemyPiece == occupationType)
+            if (TileOccupiedBy.EnemyPiece == occupationType)
             {
                 moves.AttackMoves.Add(possibleMove);
                 break;

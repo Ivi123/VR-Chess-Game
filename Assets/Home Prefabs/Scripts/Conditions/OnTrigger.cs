@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -32,7 +31,7 @@ public class OnTrigger : MonoBehaviour
 
     private bool CanTrigger(GameObject otherGameObject)
     {
-        if(requiredTag != string.Empty)
+        if (requiredTag != string.Empty)
         {
             return otherGameObject.CompareTag(requiredTag);
         }

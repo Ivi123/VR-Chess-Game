@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,13 +32,13 @@ public class King : ChessPiece
 
         possibleMoves.ForEach(move =>
         {
-            var occupationType = Chessboard.CalculateSpaceOccupation(move, team);
+            var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
             switch (occupationType)
             {
-                case Shared.TileOccuppiedBy.None:
+                case Shared.TileOccupiedBy.None:
                     moves.AvailableMoves.Add(move);
                     break;
-                case Shared.TileOccuppiedBy.EnemyPiece:
+                case Shared.TileOccupiedBy.EnemyPiece:
                     moves.AttackMoves.Add(move);
                     break;
             }
