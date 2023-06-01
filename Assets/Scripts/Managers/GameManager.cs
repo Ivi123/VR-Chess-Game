@@ -51,7 +51,8 @@ namespace Managers
 
         private void SetPlayer()
         {
-            xrOrigin.transform.position = new Vector3(playingPosition.x, playingPosition.y - 1, playingPosition.z);
+            var direction = Shared.TeamType.White.Equals(playersTeam) ? 1 : -1;
+            xrOrigin.transform.position = new Vector3(playingPosition.x + (0.25f * direction), playingPosition.y - 2.5f, playingPosition.z);
             xrOrigin.GetComponent<ActionBasedContinuousMoveProvider>().enabled = false;
         }
     }
