@@ -14,7 +14,6 @@ namespace Managers
         public const int TileCountX = 8;
         public const int TileCountY = 8;
         public Vector3 Bounds { get; set; }
-
         public GameObject[,] Tiles { get; set; }
 
         public Vector3 GetTileCenter(int x, int y)

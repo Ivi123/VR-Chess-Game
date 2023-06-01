@@ -22,6 +22,9 @@ public class Chessboard : MonoBehaviour
     
     public void StartGame()
     {
+        MovementManager.WhitePieces = new List<GameObject>();
+        MovementManager.BlackPieces = new List<GameObject>();
+        
         boardCenter = new Vector3(transform.position.x * -1, 0, transform.position.z * -1);
         TileManager.Bounds = 
             new Vector3((TileManager.TileCountX / 2.0f) * TileManager.TileSize, 0, (TileManager.TileCountY / 2.0f) * TileManager.TileSize) + boardCenter;
@@ -167,6 +170,16 @@ public class Chessboard : MonoBehaviour
         cp.GetComponent<MeshRenderer>().material = teamMaterials[(int)team];
         cp.Material = teamMaterials[(int)team];
 
+        if (Shared.TeamType.Black.Equals(team))
+        {
+            MovementManager.BlackPieces.Add(cpGameObject);
+        }
+        else
+        {
+            MovementManager.WhitePieces.Add(cpGameObject);
+        }
+
+        
         return cp;
     }
     
