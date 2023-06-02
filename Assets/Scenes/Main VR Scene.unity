@@ -5693,6 +5693,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e8154f9461e8c46b2be5bbd7144016, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mockTeamSelection: 0
+  mockTeamType: 0
   chessboard: {fileID: 1153195639}
   movementManager: {fileID: 2033259343}
   tileManager: {fileID: 1922449425}

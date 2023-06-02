@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ChessLogic;
 using UnityEngine;
 
 public class King : ChessPiece

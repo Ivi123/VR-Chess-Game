@@ -31,11 +31,11 @@ namespace Managers
             return Tiles[tileCoord.x, tileCoord.y].GetComponent<Tile>().IsWhiteTile;
         }
         
-        public void HandleTileTrigger(Vector2Int position, bool enterTrigger, Shared.MoveType moveType)
+        public void HandleTileTrigger(Vector2Int position, bool enterTrigger, Shared.MovementType movementType)
         {
             if (enterTrigger)
             {
-                var tileType = Shared.MoveType.Normal == moveType ? Shared.TileType.MoveTo : Shared.TileType.HighlightAttack;
+                var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.MoveTo : Shared.TileType.HighlightAttack;
                 UpdateTileMaterial(position, tileType);
             }
             else
@@ -43,12 +43,12 @@ namespace Managers
                 var tile = Tiles[position.x, position.y];
                 if (tile.GetComponent<Tile>().IsWhiteTile)
                 {
-                    var tileType = Shared.MoveType.Normal == moveType ? Shared.TileType.AvailableWhite : Shared.TileType.AttackTileWhite;
+                    var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.AvailableWhite : Shared.TileType.AttackTileWhite;
                     UpdateTileMaterial(position, tileType);
                 }
                 else
                 {
-                    var tileType = Shared.MoveType.Normal == moveType ? Shared.TileType.AvailableBlack : Shared.TileType.AttackTileBlack;
+                    var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.AvailableBlack : Shared.TileType.AttackTileBlack;
                     UpdateTileMaterial(position, tileType);
                 }
             }

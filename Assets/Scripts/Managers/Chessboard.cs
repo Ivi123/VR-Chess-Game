@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ChessLogic;
 using Managers;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;

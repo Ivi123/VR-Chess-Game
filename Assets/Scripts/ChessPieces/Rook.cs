@@ -1,3 +1,5 @@
+using ChessLogic;
+
 public class Rook : ChessPiece
 {
     public override Moves CalculateAvailablePositions()

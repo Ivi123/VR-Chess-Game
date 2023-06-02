@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ChessLogic;
 using UnityEngine;
 
 public static class Shared
@@ -35,11 +36,19 @@ public static class Shared
         Black
     }
 
-    public enum MoveType
+    public enum MovementType
     {
         Normal,
         Attack,
         None
+    }
+
+    public enum MoveType
+    {
+        EnPassant,
+        Castling,
+        Promotion,
+        Normal
     }
 
     public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)

@@ -1,3 +1,5 @@
+using ChessLogic;
+
 public class Queen : ChessPiece
 {
     public override Moves CalculateAvailablePositions()

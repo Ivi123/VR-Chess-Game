@@ -1,3 +1,5 @@
+using System;
+using ChessLogic;
 using Managers;
 using UnityEngine;
 
@@ -34,6 +36,12 @@ public abstract class ChessPiece : MonoBehaviour
 
     //---------------------------------------------------- Methods ------------------------------------------------------
 
+    public void Start()
+    {
+        transform.rotation = Quaternion.Euler(team == Shared.TeamType.White ? new Vector3(0, -90, 0) : new Vector3(0, 90, 0));
+        this.SaveOrientation();
+    }
+
     public void PickPiece()
     {
         transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = true;
@@ -48,6 +56,7 @@ public abstract class ChessPiece : MonoBehaviour
 
         transform.SetPositionAndRotation(position, desiredRotation);
         transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
+        HoveringTile = null;
     }
 
     public void SavePosition()

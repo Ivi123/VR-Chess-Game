@@ -1,3 +1,5 @@
+using ChessLogic;
+
 public class Bishop : ChessPiece
 {
     public override Moves CalculateAvailablePositions()
