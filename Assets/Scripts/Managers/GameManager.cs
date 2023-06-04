@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ChessLogic;
 using ChessPieces;
 using UnityEngine;
@@ -11,31 +12,31 @@ namespace Managers
         // Mock Start Game
         public bool mockTeamSelection;
         public Shared.TeamType mockTeamType;
-        
+
         // Properties
         public Chessboard chessboard;
         public MovementManager movementManager;
         public TileManager tileManager;
         public GameObject xrOrigin;
         public bool IsWhiteTurn { get; private set; }
-        
+
         // Game History
         public List<Turn> History { get; set; }
         public Turn LastTurn { get; set; }
-       
-        
+
+
         // Player Info and team selection
         private Shared.TeamType playersTeam;
-        private Vector3 playingPosition;        
+        private Vector3 playingPosition;
         public List<GameObject> teamSelectors;
-        
-        
+
+
         //--------------------------------------- Methods ----------------------------------------------------------
         private void Awake()
         {
             History = new List<Turn>();
             LastTurn = null;
-            
+
             movementManager.TileManager = tileManager;
             chessboard.MovementManager = movementManager;
             chessboard.TileManager = tileManager;
@@ -54,12 +55,12 @@ namespace Managers
             IsWhiteTurn = true;
             movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
         }
-        
+
         public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition)
         {
             playersTeam = selectedTeam;
             playingPosition = selectorPosition;
-            
+
             StartGame();
             SetPlayer();
 
@@ -68,7 +69,7 @@ namespace Managers
                 Destroy(teamSelector);
             }
         }
-        
+
         public void AdvanceTurn(Turn currentTurn)
         {
             DisableEnPassantTargetOnLastTurnPiece();
@@ -86,17 +87,32 @@ namespace Managers
 
         private void DisableEnPassantTargetOnLastTurnPiece()
         {
-            if(LastTurn != null && LastTurn.PiecesMovedInThisTurn.Pieces[^1].type == ChessPieceType.Pawn)
+            if (LastTurn != null && LastTurn.PiecesMovedInThisTurn.Pieces[^1].type == ChessPieceType.Pawn)
             {
                 ((Pawn)LastTurn.PiecesMovedInThisTurn.Pieces[^1]).IsEnPassantTarget = false;
             }
         }
-        
+
         private void SetPlayer()
         {
             var direction = Shared.TeamType.White.Equals(playersTeam) ? 1 : -1;
-            xrOrigin.transform.position = new Vector3(playingPosition.x + (0.25f * direction), playingPosition.y - 2.5f, playingPosition.z);
+            xrOrigin.transform.position = new Vector3(playingPosition.x + (0.25f * direction), playingPosition.y - 2.5f,
+                playingPosition.z);
             xrOrigin.GetComponent<ActionBasedContinuousMoveProvider>().enabled = false;
+        }
+
+        public bool IsChessPieceInHistory(ChessPiece chessPiece)
+        {
+            foreach (var turn in History)
+            {
+                var pieces = turn.PiecesMovedInThisTurn.Pieces;
+                foreach (var piece in pieces)
+                {
+                    if (piece == chessPiece) return true;
+                }
+            }
+
+            return false;
         }
     }
 }

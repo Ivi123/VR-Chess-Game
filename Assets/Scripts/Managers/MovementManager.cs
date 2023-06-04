@@ -100,17 +100,18 @@ namespace Managers
             
             // Update the ChessPieces matrix with the new format after a chess piece was moved. The method returns
             // the turn that was just made with all the moved pieces and the changes in positions
-            var turn = MakeMove(chessPiece, newTile);
+            var turn = MakeMove(chessPiece, newTile, false);
             if(turn != null) GameManager.AdvanceTurn(turn);
 
             // Change back the Available/Attack/Special Tiles material back to the default value 
             TileManager.UpdateTileMaterialAfterMove(chessPiece);
             if(turn == null) return;
             GenerateAllMoves();
+            EvaluateKingStatus();
             EliminateInvalidMoves(GameManager.IsWhiteTurn);
         }
 
-        private Turn MakeMove(ChessPiece chessPiece, Tile newTile)
+        private Turn MakeMove(ChessPiece chessPiece, Tile newTile, bool isSimulation)
         {
             if (newTile == null) return null;
             
@@ -128,7 +129,7 @@ namespace Managers
             {
                 var enemyPiece = ChessPieces[newPosition.x, newPosition.y];
                 movedPieces.AddNewPieceAndPosition(enemyPiece, MovedPieces.EliminationPosition);
-                EliminatePiece(enemyPiece);
+                EliminatePiece(enemyPiece, isSimulation);
             }
 
             if (newTile.IsSpecialTile)
@@ -141,7 +142,7 @@ namespace Managers
                         var enemyPiece = ChessPieces[newPosition.x + (direction * 1), newPosition.y];
                         turn.MoveType = Shared.MoveType.EnPassant;
                         movedPieces.AddNewPieceAndPosition(enemyPiece, MovedPieces.EliminationPosition);
-                        EliminatePiece(enemyPiece);
+                        EliminatePiece(enemyPiece, isSimulation);
                         break;
                     //case Shared.MoveType.Castling:
                     //    throw new NotImplementedException();
@@ -155,8 +156,8 @@ namespace Managers
                     //    throw new ArgumentOutOfRangeException();
                 }
             }
+            
             movedPieces.AddNewPieceAndPosition(chessPiece, newTile.Position);
-            chessPiece.transform.position = TileManager.GetTileCenter(newPosition.x, newPosition.y);
             ChessPieces[newPosition.x, newPosition.y] = chessPiece;
             ChessPieces[currentPosition.x, currentPosition.y] = null;
             chessPiece.currentX = newPosition.x;
@@ -167,10 +168,43 @@ namespace Managers
                 pawn.IsEnPassantTarget = true;
             }
 
+            if(!isSimulation) chessPiece.transform.position = TileManager.GetTileCenter(newPosition.x, newPosition.y);
             chessPiece.SavePosition();
+            
             chessPiece.IsMoved = true;
 
             return turn;
+        }
+
+        private void EliminatePiece(ChessPiece enemyPiece, bool isSimulation)
+        {
+            Vector3 eliminationPosition;
+            if(enemyPiece.team == Shared.TeamType.White)
+            {
+                WhitePieces.Remove(enemyPiece.gameObject);
+                eliminationPosition = FreeWhiteEliminationPosition.First.Value;
+                UsedWhiteEliminationPosition.AddFirst(eliminationPosition);
+                FreeWhiteEliminationPosition.RemoveFirst();
+            }
+            else
+            {
+                BlackPieces.Remove(enemyPiece.gameObject);
+                eliminationPosition = FreeBlackEliminationPosition.First.Value;
+                UsedBlackEliminationPosition.AddFirst(eliminationPosition);
+                FreeBlackEliminationPosition.RemoveFirst();
+            }
+
+         
+            ChessPieces[enemyPiece.currentX, enemyPiece.currentY] = null;
+            enemyPiece.currentX = -1;
+            enemyPiece.currentY = -1;
+            if(!isSimulation) EliminatePieceFromBoard(enemyPiece, eliminationPosition);
+        }
+
+        private void EliminatePieceFromBoard(ChessPiece enemyPiece, Vector3 eliminationPosition)
+        {
+            enemyPiece.transform.position = eliminationPosition;
+            enemyPiece.GetComponent<XRGrabInteractable>().enabled = false;
         }
 
         public void UndoLastMove()
@@ -179,19 +213,20 @@ namespace Managers
             if(turnToUndo == null) return;
             var movesToUndo = turnToUndo.PiecesMovedInThisTurn;
 
-            UndoMove(movesToUndo);
+            UndoMove(movesToUndo, false);
             UndoMoveOnBoard(movesToUndo);
             
             GameManager.SwitchTurn();
             
             GenerateAllMoves();
+            EvaluateKingStatus();
             EliminateInvalidMoves(GameManager.IsWhiteTurn);
             
             GameManager.History.Remove(turnToUndo);
             GameManager.LastTurn = GameManager.History.Count == 0 ? null : GameManager.History[^1];
         }
 
-        private void UndoMove(MovedPieces movesToUndo)
+        private void UndoMove(MovedPieces movesToUndo, bool isSimulation)
         {
             for (var i = movesToUndo.PositionChanges.Count - 1; i >= 0; i--)
             {
@@ -220,14 +255,51 @@ namespace Managers
                 {
                     ChessPieces[currentPosition.x, currentPosition.y] = null;
                 }
-
+                
                 ChessPieces[oldPosition.x, oldPosition.y] = chessPieceToUndo;
                 chessPieceToUndo.currentX = oldPosition.x;
                 chessPieceToUndo.currentY = oldPosition.y;
                 if (chessPieceToUndo.startingPosition == oldPosition) chessPieceToUndo.IsMoved = false;
+                DetermineEnPassantStatus(chessPieceToUndo, isSimulation);
             }
         }
 
+        private void DetermineEnPassantStatus(ChessPiece chessPieceToUndo, bool isSimulation)
+        {
+            if (chessPieceToUndo is Pawn pawn)
+            {
+                if (Mathf.Abs(pawn.startingPosition.x - pawn.currentX) == 2 && !GameManager.IsChessPieceInHistory(chessPieceToUndo))
+                {
+                    pawn.IsEnPassantTarget = true;
+                } else if (pawn.startingPosition ==
+                           new Vector2Int(chessPieceToUndo.currentX, chessPieceToUndo.currentY))
+                {
+                    pawn.IsEnPassantTarget = false;
+                }
+            }
+            
+            if(isSimulation) return;
+            
+            MovedPieces piecesMovedTwoTurnsAgo;
+            try
+            {
+                piecesMovedTwoTurnsAgo = GameManager.History[^2].PiecesMovedInThisTurn;
+            }
+            catch (Exception e)
+            {
+                return;
+            }
+
+            foreach (var piece in piecesMovedTwoTurnsAgo.Pieces)
+            {
+                if (piece is Pawn pawnTwoTurnsAgo &&
+                    Mathf.Abs(pawnTwoTurnsAgo.currentX - pawnTwoTurnsAgo.startingPosition.x) == 2)
+                {
+                    pawnTwoTurnsAgo.IsEnPassantTarget = true;
+                }
+            }
+        }
+        
         private void UndoMoveOnBoard(MovedPieces movesToUndo)
         {
             for (var i = movesToUndo.PositionChanges.Count - 1; i >= 0; i--)
@@ -279,29 +351,6 @@ namespace Managers
             { 
                 piece.GetComponent<XRGrabInteractable>().enabled = true;
             }
-        }
-
-        private void EliminatePiece(ChessPiece enemyPiece)
-        {
-            Vector3 eliminationPosition;
-            if(enemyPiece.team == Shared.TeamType.White)
-            {
-                WhitePieces.Remove(enemyPiece.gameObject);
-                eliminationPosition = FreeWhiteEliminationPosition.First.Value;
-                UsedWhiteEliminationPosition.AddFirst(eliminationPosition);
-                FreeWhiteEliminationPosition.RemoveFirst();
-            }
-            else
-            {
-                BlackPieces.Remove(enemyPiece.gameObject);
-                eliminationPosition = FreeBlackEliminationPosition.First.Value;
-                UsedBlackEliminationPosition.AddFirst(eliminationPosition);
-                FreeBlackEliminationPosition.RemoveFirst();
-            }
-
-            ChessPieces[enemyPiece.currentX, enemyPiece.currentY] = null;
-            enemyPiece.transform.position = eliminationPosition;
-            enemyPiece.GetComponent<XRGrabInteractable>().enabled = false;
         }
         
         public Shared.TileOccupiedBy CalculateSpaceOccupation(Vector2Int position, Shared.TeamType selectedPieceTeam)
@@ -370,32 +419,147 @@ namespace Managers
 
         private void EliminateInvalidMoves(bool isCurrentTeamWhite)
         {
-            var enemyPieces =
-                isCurrentTeamWhite
-                    ? BlackPieces.Select(go => go.GetComponent<ChessPiece>())
-                    : WhitePieces.Select(go => go.GetComponent<ChessPiece>());
-
             var friendlyPieces =
                 isCurrentTeamWhite
                     ? WhitePieces.Select(go => go.GetComponent<ChessPiece>())
                     : BlackPieces.Select(go => go.GetComponent<ChessPiece>());
-           
-            var protectedKing = isCurrentTeamWhite ? whiteKing : blackKing;
+
+            var protectedKing = isCurrentTeamWhite ? ((King) whiteKing) : ((King) blackKing);
+            var protectedKingCoords = new Vector2Int(protectedKing.currentX, protectedKing.currentY);
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
 
             foreach (var fPiece in friendlyPieces)
             {
-                var currentPieceTile = TileManager.GetTile(fPiece.currentX, fPiece.currentY);
+                var currentPieceTile = protectedKing.isChecked
+                    ? TileManager.GetTile(protectedKingCoords)
+                    : TileManager.GetTile(fPiece.currentX, fPiece.currentY);
                 if (currentPieceTile.AttackedBy == Shared.AttackedBy.None) continue;
                 if (currentPieceTile.AttackedBy == ignoredAttacks) continue;
                 
-                var allMoves = fPiece.GetAllPossibleMoves();
-                foreach (var move in allMoves)
+                var piecesAttackingTheTile = isCurrentTeamWhite
+                    ? currentPieceTile.BlackAttackingPieces
+                    : currentPieceTile.WhiteAttackingPieces;
+
+                var attackMovesToBeRemoved = new List<Vector2Int>();
+                foreach (var move in fPiece.Moves.AttackMoves)
                 {
+                    // Simulate Move
+                    TileManager.GetTile(move).IsAttackTile = true;
+                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
                     
+                    // Calculate protected king check status
+                    var markMoveForExclusion = false;
+                    foreach (var attackingPiece in piecesAttackingTheTile)
+                    {
+                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
+                        var attackMoves = moves.AttackMoves;
+                        var attackSpecialMoves =
+                            moves.SpecialMoves
+                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
+                                .Select(sMove => sMove.Coords);
+
+                        if (!attackMoves.Contains(protectedKingCoords) &&
+                            !attackSpecialMoves.Contains(protectedKingCoords))
+                            continue;
+                        
+                        markMoveForExclusion = true;
+                        break;
+                    }
+
+                    if (markMoveForExclusion) attackMovesToBeRemoved.Add(move);
+
+                        // Undo simulated Move
+                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
+                    TileManager.GetTile(move).IsAttackTile = false;
                 }
+                foreach (var removedMove in attackMovesToBeRemoved)
+                    fPiece.Moves.AttackMoves.Remove(removedMove);
+                
+
+                var availableMovesToBeRemoved = new List<Vector2Int>();
+                foreach (var move in fPiece.Moves.AvailableMoves)
+                {
+                    TileManager.GetTile(move).IsAvailableTile = true;
+                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
+
+                    var markMoveForExclusion = false;
+                    foreach (var attackingPiece in piecesAttackingTheTile)
+                    {
+                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
+                        var attackMoves = moves.AttackMoves;
+                        var attackSpecialMoves =
+                            moves.SpecialMoves
+                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
+                                .Select(sMove => sMove.Coords);
+
+                        if (!attackMoves.Contains(protectedKingCoords) &&
+                            !attackSpecialMoves.Contains(protectedKingCoords))
+                            continue;
+                        
+                        markMoveForExclusion = true;
+                        break;
+                    }
+
+                    if (markMoveForExclusion) availableMovesToBeRemoved.Add(move);
+                    
+                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
+                    TileManager.GetTile(move).IsAvailableTile = false;
+                }
+
+                foreach (var removedMove in availableMovesToBeRemoved)
+                    fPiece.Moves.AvailableMoves.Remove(removedMove);
+
+                var specialMovesToBeRemoved = new List<SpecialMove>();
+                foreach (var move in fPiece.Moves.SpecialMoves)
+                {
+                    TileManager.GetTile(move.Coords).IsSpecialTile = true;
+                    TileManager.GetTile(move.Coords).IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
+                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move.Coords), true);
+                    
+                    var markMoveForExclusion = false;
+                    foreach (var attackingPiece in piecesAttackingTheTile)
+                    {
+                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
+                        var attackMoves = moves.AttackMoves;
+                        var attackSpecialMoves =
+                            moves.SpecialMoves
+                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
+                                .Select(sMove => sMove.Coords);
+
+                        if (!attackMoves.Contains(protectedKingCoords) &&
+                            !attackSpecialMoves.Contains(protectedKingCoords))
+                            continue;
+                        
+                        markMoveForExclusion = true;
+                        break;
+                    }
+
+                    if (markMoveForExclusion) specialMovesToBeRemoved.Add(move);
+                    
+                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
+                    TileManager.GetTile(move.Coords).IsSpecialTile = false;
+                    TileManager.GetTile(move.Coords).IsAttackTile = false;
+                }
+
+                foreach (var removedMove in specialMovesToBeRemoved)
+                    fPiece.Moves.SpecialMoves.Remove(removedMove);
+            }
+        }
+
+        private void EvaluateKingStatus()
+        {
+            var king = GameManager.IsWhiteTurn ? whiteKing : blackKing;
+            var ignoredAttacks = GameManager.IsWhiteTurn ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
+            var kingCoords = new Vector2Int(king.currentX, king.currentY);
+            var kingTile = TileManager.GetTile(kingCoords);
+
+            if (kingTile.AttackedBy == ignoredAttacks || kingTile.AttackedBy == Shared.AttackedBy.None)
+            {
+                ((King)king).isChecked = false;
+                return;
             }
             
+            ((King)king).isChecked = true;
         }
     }
 }

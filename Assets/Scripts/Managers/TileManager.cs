@@ -61,7 +61,7 @@ namespace Managers
         {
             if (enterTrigger)
             {
-                var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.MoveTo : Shared.TileType.HighlightAttack;
+                var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.HighlightMoveTo : Shared.TileType.HighlightAttack;
                 UpdateTileMaterial(position, tileType);
             }
             else

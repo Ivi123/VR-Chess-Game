@@ -89,5 +89,37 @@ namespace ChessPieces
         }
         
         public abstract void CalculateAvailablePositions();
+
+        public Moves CalculateAvailablePositionsWithoutUpdating()
+        {
+            if (currentX == -1 && currentY == -1)
+            {
+                return new Moves();
+            } 
+            
+            // Save Old Moves
+            var oldMoves = new Moves
+            {
+                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
+                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
+                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
+            };
+
+            //Calculate new moves
+            CalculateAvailablePositions();
+
+            // Save New Moves in a separate field 
+            var newMoves = new Moves
+            {
+                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
+                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
+                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
+            };
+
+            //Revert piece moves back to the old set
+            Moves = oldMoves;
+            
+            return newMoves;
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace ChessPieces
 {
     public class King : ChessPiece
     {
+        public bool isChecked = false;
         public override void CalculateAvailablePositions()
         {
             Moves = new Moves();

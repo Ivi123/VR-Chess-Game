@@ -21,7 +21,7 @@ namespace ChessPieces
             Vector2Int horseLeftMove2 = new(currentX - (direction * 1), currentY + 2);
 
             Vector2Int horseRightMove1 = new(currentX + (direction * 1), currentY - 2);
-            Vector2Int horseRightMove2 = new(currentX + (direction * 1), currentY - 2);
+            Vector2Int horseRightMove2 = new(currentX - (direction * 1), currentY - 2);
 
             List<Vector2Int> possibleMoves = new()
             {

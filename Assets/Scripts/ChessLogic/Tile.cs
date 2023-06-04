@@ -48,5 +48,9 @@ public class Tile : MonoBehaviour
         AttackedBy = Shared.AttackedBy.None;
         WhiteAttackingPieces = new List<ChessPiece>();
         BlackAttackingPieces = new List<ChessPiece>();
+
+        IsSpecialTile = false;
+        IsAttackTile = false;
+        IsSpecialTile = false;
     }
 }

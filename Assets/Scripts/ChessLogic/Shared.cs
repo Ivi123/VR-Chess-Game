@@ -18,7 +18,7 @@ namespace ChessLogic
             Selected,
             AvailableBlack,
             AvailableWhite,
-            MoveTo,
+            HighlightMoveTo,
             AttackTileBlack,
             AttackTileWhite,
             HighlightAttack
