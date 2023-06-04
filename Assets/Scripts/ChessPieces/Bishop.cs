@@ -1,16 +1,17 @@
 using ChessLogic;
 
-public class Bishop : ChessPiece
+namespace ChessPieces
 {
-    public override Moves CalculateAvailablePositions()
+    public class Bishop : ChessPiece
     {
-        Moves moves = new();
-
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1);
-
-        return moves;
+        public override void CalculateAvailablePositions()
+        {
+            Moves = new Moves();
+            
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1);
+        }
     }
 }

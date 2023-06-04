@@ -2,49 +2,49 @@ using System.Collections.Generic;
 using ChessLogic;
 using UnityEngine;
 
-public class King : ChessPiece
+namespace ChessPieces
 {
-    public override Moves CalculateAvailablePositions()
+    public class King : ChessPiece
     {
-        Moves moves = new();
-        int direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
-
-        Vector2Int KingForwardMove = new(currentX, currentY + 1);
-        Vector2Int KingBackwardMove = new(currentX, currentY - 1);
-        Vector2Int KingLeftMove = new(currentX - 1, currentY);
-        Vector2Int KingRightMove = new(currentX + 1, currentY);
-
-        Vector2Int KingLeftForwardMove = new(currentX - 1, currentY + 1);
-        Vector2Int KingLeftBackwardMove = new(currentX - 1, currentY - 1);
-        Vector2Int KingRightBackwardMove = new(currentX + 1, currentY - 1);
-        Vector2Int KingRightForwardMove = new(currentX + 1, currentY + 1);
-
-        List<Vector2Int> possibleMoves = new()
+        public override void CalculateAvailablePositions()
         {
-            KingForwardMove,
-            KingBackwardMove,
-            KingLeftMove,
-            KingRightMove,
-            KingLeftForwardMove,
-            KingLeftBackwardMove,
-            KingRightBackwardMove,
-            KingRightForwardMove
-        };
+            Moves = new Moves();
+            
+            Vector2Int kingForwardMove = new(currentX, currentY + 1);
+            Vector2Int kingBackwardMove = new(currentX, currentY - 1);
+            Vector2Int kingLeftMove = new(currentX - 1, currentY);
+            Vector2Int kingRightMove = new(currentX + 1, currentY);
 
-        possibleMoves.ForEach(move =>
-        {
-            var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
-            switch (occupationType)
+            Vector2Int kingLeftForwardMove = new(currentX - 1, currentY + 1);
+            Vector2Int kingLeftBackwardMove = new(currentX - 1, currentY - 1);
+            Vector2Int kingRightBackwardMove = new(currentX + 1, currentY - 1);
+            Vector2Int kingRightForwardMove = new(currentX + 1, currentY + 1);
+
+            List<Vector2Int> possibleMoves = new()
             {
-                case Shared.TileOccupiedBy.None:
-                    moves.AvailableMoves.Add(move);
-                    break;
-                case Shared.TileOccupiedBy.EnemyPiece:
-                    moves.AttackMoves.Add(move);
-                    break;
-            }
-        });
+                kingForwardMove,
+                kingBackwardMove,
+                kingLeftMove,
+                kingRightMove,
+                kingLeftForwardMove,
+                kingLeftBackwardMove,
+                kingRightBackwardMove,
+                kingRightForwardMove
+            };
 
-        return moves;
+            possibleMoves.ForEach(move =>
+            {
+                var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
+                switch (occupationType)
+                {
+                    case Shared.TileOccupiedBy.None:
+                        Moves.AvailableMoves.Add(move);
+                        break;
+                    case Shared.TileOccupiedBy.EnemyPiece:
+                        Moves.AttackMoves.Add(move);
+                        break;
+                }
+            });
+        }
     }
 }

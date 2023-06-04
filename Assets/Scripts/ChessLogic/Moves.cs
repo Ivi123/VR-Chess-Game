@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ChessPieces;
 using UnityEngine;
 
 namespace ChessLogic
@@ -12,9 +13,9 @@ namespace ChessLogic
         
         public Moves()
         {
-            AvailableMoves = new();
-            AttackMoves = new();
-            SpecialMoves = new();
+            AvailableMoves = new List<Vector2Int>();
+            AttackMoves = new List<Vector2Int>();
+            SpecialMoves = new List<SpecialMove>();
         }
 
         public Shared.MoveType FindSpecialMoveTypeFromCoords(Vector2Int coords)

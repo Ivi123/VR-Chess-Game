@@ -8,32 +8,29 @@ namespace ChessPieces
     {
         public bool IsEnPassantTarget { get; set; }
         
-        public override Moves CalculateAvailablePositions()
+        public override void CalculateAvailablePositions()
         {
-            Moves moves = new();
-
+            Moves = new Moves();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
             Vector2Int possibleMoveOneTileAhead = new(currentX + (direction * 1), currentY);
             if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveOneTileAhead, team))
             {
-                moves.AvailableMoves.Add(possibleMoveOneTileAhead);
+                Moves.AvailableMoves.Add(possibleMoveOneTileAhead);
                 if (!isMoved)
                 {
                     Vector2Int possibleMoveTwoTilesAhead = new(currentX + (direction * 2), currentY);
-                    if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team)) moves.AvailableMoves.Add(possibleMoveTwoTilesAhead);
+                    if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team)) Moves.AvailableMoves.Add(possibleMoveTwoTilesAhead);
                 }
             }
 
             Vector2Int attackMoveLeft = new(currentX + (direction * 1), currentY + 1);
-            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveLeft, team)) moves.AttackMoves.Add(attackMoveLeft);
+            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveLeft, team)) Moves.AttackMoves.Add(attackMoveLeft);
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
-            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveRight, team)) moves.AttackMoves.Add(attackMoveRight);
+            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveRight, team)) Moves.AttackMoves.Add(attackMoveRight);
             
-            moves.SpecialMoves = CalculateSpecialMoves();
-
-            return moves;
+            Moves.SpecialMoves = CalculateSpecialMoves();
         }
 
         private List<SpecialMove> CalculateSpecialMoves()

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using ChessLogic;
+using ChessPieces;
 using UnityEngine;
 
 public class Turn

@@ -1,3 +1,4 @@
+using ChessPieces;
 using UnityEngine;
 
 namespace ChessLogic

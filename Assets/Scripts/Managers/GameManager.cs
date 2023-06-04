@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using ChessLogic;
 using ChessPieces;
-using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -17,17 +17,20 @@ namespace Managers
         public MovementManager movementManager;
         public TileManager tileManager;
         public GameObject xrOrigin;
-            
         public bool IsWhiteTurn { get; private set; }
-        public List<GameObject> teamSelectors;
-
         
-        private Shared.TeamType playersTeam;
-        private Vector3 playingPosition;
-
+        // Game History
         public List<Turn> History { get; set; }
         public Turn LastTurn { get; set; }
+       
         
+        // Player Info and team selection
+        private Shared.TeamType playersTeam;
+        private Vector3 playingPosition;        
+        public List<GameObject> teamSelectors;
+        
+        
+        //--------------------------------------- Methods ----------------------------------------------------------
         private void Awake()
         {
             History = new List<Turn>();
@@ -44,12 +47,38 @@ namespace Managers
             }
         }
 
+        private void StartGame()
+        {
+            chessboard.StartGame();
+            movementManager.GenerateAllMoves();
+            IsWhiteTurn = true;
+            movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
+        }
+        
+        public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition)
+        {
+            playersTeam = selectedTeam;
+            playingPosition = selectorPosition;
+            
+            StartGame();
+            SetPlayer();
+
+            foreach (var teamSelector in teamSelectors)
+            {
+                Destroy(teamSelector);
+            }
+        }
+        
         public void AdvanceTurn(Turn currentTurn)
         {
-            
             DisableEnPassantTargetOnLastTurnPiece();
             History.Add(currentTurn);
             LastTurn = currentTurn;
+            SwitchTurn();
+        }
+
+        public void SwitchTurn()
+        {
             IsWhiteTurn = !IsWhiteTurn;
             movementManager.DisableOrEnablePickUpOnPieces(movementManager.WhitePieces);
             movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
@@ -63,27 +92,6 @@ namespace Managers
             }
         }
         
-        public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition)
-        {
-            playersTeam = selectedTeam;
-            playingPosition = selectorPosition;
-            
-            StartGame();
-            SetPlayer();
-            
-            foreach (var teamSelector in teamSelectors)
-            {
-                Destroy(teamSelector);
-            }
-        }
-
-        private void StartGame()
-        {
-            chessboard.StartGame();
-            IsWhiteTurn = true;
-            movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
-        }
-
         private void SetPlayer()
         {
             var direction = Shared.TeamType.White.Equals(playersTeam) ? 1 : -1;

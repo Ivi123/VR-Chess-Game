@@ -1,17 +1,18 @@
 using ChessLogic;
 
-public class Rook : ChessPiece
+namespace ChessPieces
 {
-    public override Moves CalculateAvailablePositions()
+    public class Rook : ChessPiece
     {
-        Moves moves = new();
+        public override void CalculateAvailablePositions()
+        {
+            Moves = new Moves();
+            
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0);
+            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1);
+        }
 
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0);
-        moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1);
-
-        return moves;
     }
-
 }
