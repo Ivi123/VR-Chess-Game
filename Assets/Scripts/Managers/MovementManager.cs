@@ -384,7 +384,13 @@ namespace Managers
                 chessPiece.CalculateAvailablePositions();
                 
                 var attackedTiles = 
-                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove));
+                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove)).ToList();
+                attackedTiles.AddRange(chessPiece.Moves.AvailableMoves
+                    .Select(avMove => TileManager.GetTile(avMove)).ToList());
+                attackedTiles.AddRange(chessPiece.Moves.SpecialMoves
+                    .Where(sm => sm.MoveType == Shared.MoveType.EnPassant)
+                    .Select(spMove => TileManager.GetTile(spMove.Coords)));
+                
                 foreach (var attackedTile in attackedTiles)
                 {
                     attackedTile.AttackedBy = attackedTile.AttackedBy switch
@@ -395,6 +401,14 @@ namespace Managers
                     };
                     attackedTile.WhiteAttackingPieces.Add(chessPiece);
                 }
+                
+                if (chessPiece is Pawn pawn)
+                {
+                    pawn.Moves.AttackMoves = 
+                        pawn.Moves.AttackMoves.Where(atMove => 
+                                CalculateSpaceOccupation(atMove, pawn.team) == Shared.TileOccupiedBy.EnemyPiece)
+                            .ToList();
+                }
             }
 
             // Calculate all the move positions for the Black Pieces and populate the Attacking Pieces/Status of the Tiles
@@ -403,7 +417,13 @@ namespace Managers
                 chessPiece.GetComponent<ChessPiece>().CalculateAvailablePositions();
 
                 var attackedTiles = 
-                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove));
+                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove)).ToList();
+                attackedTiles.AddRange(chessPiece.Moves.AvailableMoves
+                    .Select(avMove => TileManager.GetTile(avMove)).ToList());
+                attackedTiles.AddRange(chessPiece.Moves.SpecialMoves
+                    .Where(sm => sm.MoveType == Shared.MoveType.EnPassant)
+                    .Select(spMove => TileManager.GetTile(spMove.Coords)));
+                
                 foreach (var attackedTile in attackedTiles)
                 {
                     attackedTile.AttackedBy = attackedTile.AttackedBy switch
@@ -414,6 +434,15 @@ namespace Managers
                     };
                     attackedTile.BlackAttackingPieces.Add(chessPiece);
                 }
+
+                if (chessPiece is Pawn pawn)
+                {
+                    pawn.Moves.AttackMoves = 
+                        pawn.Moves.AttackMoves.Where(atMove => 
+                            CalculateSpaceOccupation(atMove, pawn.team) == Shared.TileOccupiedBy.EnemyPiece)
+                            .ToList();
+                }
+                
             }
         }
 
@@ -424,17 +453,16 @@ namespace Managers
                     ? WhitePieces.Select(go => go.GetComponent<ChessPiece>())
                     : BlackPieces.Select(go => go.GetComponent<ChessPiece>());
 
-            var protectedKing = isCurrentTeamWhite ? ((King) whiteKing) : ((King) blackKing);
-            var protectedKingCoords = new Vector2Int(protectedKing.currentX, protectedKing.currentY);
+            var protectedKing = isCurrentTeamWhite ? whiteKing : blackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
 
             foreach (var fPiece in friendlyPieces)
             {
-                var currentPieceTile = protectedKing.isChecked
-                    ? TileManager.GetTile(protectedKingCoords)
+                var currentPieceTile = ((King)protectedKing).isChecked
+                    ? TileManager.GetTile(new Vector2Int(protectedKing.currentX, protectedKing.currentY))
                     : TileManager.GetTile(fPiece.currentX, fPiece.currentY);
-                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None) continue;
-                if (currentPieceTile.AttackedBy == ignoredAttacks) continue;
+                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing) continue;
+                if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing) continue;
                 
                 var piecesAttackingTheTile = isCurrentTeamWhite
                     ? currentPieceTile.BlackAttackingPieces
@@ -444,8 +472,14 @@ namespace Managers
                 foreach (var move in fPiece.Moves.AttackMoves)
                 {
                     // Simulate Move
-                    TileManager.GetTile(move).IsAttackTile = true;
+                    var moveToTile = TileManager.GetTile(move);
+                    moveToTile.IsAttackTile = true;
                     var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
+                    
+                    if (fPiece == protectedKing)
+                        piecesAttackingTheTile = isCurrentTeamWhite
+                            ? moveToTile.BlackAttackingPieces
+                            : moveToTile.WhiteAttackingPieces;
                     
                     // Calculate protected king check status
                     var markMoveForExclusion = false;
@@ -458,8 +492,9 @@ namespace Managers
                                 .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
                                 .Select(sMove => sMove.Coords);
 
-                        if (!attackMoves.Contains(protectedKingCoords) &&
-                            !attackSpecialMoves.Contains(protectedKingCoords))
+                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
+                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX,
+                                protectedKing.currentY)))
                             continue;
                         
                         markMoveForExclusion = true;
@@ -470,7 +505,7 @@ namespace Managers
 
                         // Undo simulated Move
                     UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
-                    TileManager.GetTile(move).IsAttackTile = false;
+                    moveToTile.IsAttackTile = false;
                 }
                 foreach (var removedMove in attackMovesToBeRemoved)
                     fPiece.Moves.AttackMoves.Remove(removedMove);
@@ -479,8 +514,14 @@ namespace Managers
                 var availableMovesToBeRemoved = new List<Vector2Int>();
                 foreach (var move in fPiece.Moves.AvailableMoves)
                 {
-                    TileManager.GetTile(move).IsAvailableTile = true;
+                    var moveToTile = TileManager.GetTile(move); 
+                    moveToTile.IsAvailableTile = true;
                     var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
+
+                    if (fPiece == protectedKing)
+                        piecesAttackingTheTile = isCurrentTeamWhite
+                            ? moveToTile.BlackAttackingPieces
+                            : moveToTile.WhiteAttackingPieces;
 
                     var markMoveForExclusion = false;
                     foreach (var attackingPiece in piecesAttackingTheTile)
@@ -492,8 +533,8 @@ namespace Managers
                                 .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
                                 .Select(sMove => sMove.Coords);
 
-                        if (!attackMoves.Contains(protectedKingCoords) &&
-                            !attackSpecialMoves.Contains(protectedKingCoords))
+                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
+                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
                             continue;
                         
                         markMoveForExclusion = true;
@@ -503,7 +544,7 @@ namespace Managers
                     if (markMoveForExclusion) availableMovesToBeRemoved.Add(move);
                     
                     UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
-                    TileManager.GetTile(move).IsAvailableTile = false;
+                    moveToTile.IsAvailableTile = false;
                 }
 
                 foreach (var removedMove in availableMovesToBeRemoved)
@@ -512,9 +553,15 @@ namespace Managers
                 var specialMovesToBeRemoved = new List<SpecialMove>();
                 foreach (var move in fPiece.Moves.SpecialMoves)
                 {
-                    TileManager.GetTile(move.Coords).IsSpecialTile = true;
-                    TileManager.GetTile(move.Coords).IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
+                    var moveToTile = TileManager.GetTile(move.Coords); 
+                    moveToTile.IsSpecialTile = true;
+                    moveToTile.IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
                     var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move.Coords), true);
+                    
+                    if (fPiece == protectedKing)
+                        piecesAttackingTheTile = isCurrentTeamWhite
+                            ? moveToTile.BlackAttackingPieces
+                            : moveToTile.WhiteAttackingPieces;
                     
                     var markMoveForExclusion = false;
                     foreach (var attackingPiece in piecesAttackingTheTile)
@@ -526,8 +573,8 @@ namespace Managers
                                 .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
                                 .Select(sMove => sMove.Coords);
 
-                        if (!attackMoves.Contains(protectedKingCoords) &&
-                            !attackSpecialMoves.Contains(protectedKingCoords))
+                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
+                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
                             continue;
                         
                         markMoveForExclusion = true;

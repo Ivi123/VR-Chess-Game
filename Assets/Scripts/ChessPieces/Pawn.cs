@@ -25,10 +25,10 @@ namespace ChessPieces
             }
 
             Vector2Int attackMoveLeft = new(currentX + (direction * 1), currentY + 1);
-            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveLeft, team)) Moves.AttackMoves.Add(attackMoveLeft);
+            if (Shared.TileOccupiedBy.EndOfTable != MovementManager.CalculateSpaceOccupation(attackMoveLeft, team)) Moves.AttackMoves.Add(attackMoveLeft);
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
-            if (Shared.TileOccupiedBy.EnemyPiece == MovementManager.CalculateSpaceOccupation(attackMoveRight, team)) Moves.AttackMoves.Add(attackMoveRight);
+            if (Shared.TileOccupiedBy.EndOfTable != MovementManager.CalculateSpaceOccupation(attackMoveRight, team)) Moves.AttackMoves.Add(attackMoveRight);
             
             Moves.SpecialMoves = CalculateSpecialMoves();
         }
