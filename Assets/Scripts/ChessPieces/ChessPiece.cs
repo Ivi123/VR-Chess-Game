@@ -121,5 +121,14 @@ namespace ChessPieces
             
             return newMoves;
         }
+
+        public void AddToTileAttackingPieces(Vector2Int coords)
+        {
+            var attackTile = MovementManager.TileManager.GetTile(coords);
+            var attackingPiecesList = team == Shared.TeamType.White
+                ? attackTile.WhiteAttackingPieces
+                : attackTile.BlackAttackingPieces;
+            attackingPiecesList.Add(this);
+        }
     }
 }

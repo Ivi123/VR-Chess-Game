@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using ChessLogic;
 using ChessPieces;
+using JetBrains.Annotations;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -74,14 +76,20 @@ namespace Managers
 
             foreach (var move in chessPiece.Moves.SpecialMoves)
             {
-                TileManager.UpdateTileMaterial(move.Coords, 
-                    TileManager.IsTileWhite(move.Coords) 
-                        ? Shared.TileType.AttackTileWhite 
-                        : Shared.TileType.AttackTileBlack);
-                
-                TileManager.Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsSpecialTile = true;
-                TileManager.Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAttackTile = 
-                    move.MoveType == Shared.MoveType.EnPassant;
+                var tile = TileManager.GetTile(move.Coords);
+                tile.IsSpecialTile = true;
+                tile.IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
+                tile.IsAvailableTile = move.MoveType is Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle
+                    or Shared.MoveType.Promotion;
+
+                TileManager.UpdateTileMaterial(move.Coords,
+                    TileManager.IsTileWhite(move.Coords)
+                        ? tile.IsAttackTile 
+                            ? Shared.TileType.AttackTileWhite 
+                            : Shared.TileType.AvailableWhite
+                        : tile.IsAttackTile
+                            ? Shared.TileType.AttackTileBlack
+                            : Shared.TileType.AvailableBlack);
             }
 
             var pickedPiece = ChessPieces[x, y];
@@ -96,17 +104,19 @@ namespace Managers
             EnablePickUpOnPieces(chessPiece.team);
 
             // Update the currently picked chess piece's tile material from Selected to Default
-            TileManager.UpdateTileMaterial(new Vector2Int(currentX, currentY), Shared.TileType.Default); 
+            TileManager.UpdateTileMaterial(new Vector2Int(currentX, currentY), Shared.TileType.Default);
             
             // Update the ChessPieces matrix with the new format after a chess piece was moved. The method returns
             // the turn that was just made with all the moved pieces and the changes in positions
             var turn = MakeMove(chessPiece, newTile, false);
             if(turn != null) GameManager.AdvanceTurn(turn);
-
-            // Change back the Available/Attack/Special Tiles material back to the default value 
+            
             TileManager.UpdateTileMaterialAfterMove(chessPiece);
+            // Change back the Available/Attack/Special Tiles material back to the default value 
             if(turn == null) return;
             GenerateAllMoves();
+
+            //Evaluate new King status after turn advance so we can see if he's in check or not
             EvaluateKingStatus();
             EliminateInvalidMoves(GameManager.IsWhiteTurn);
         }
@@ -144,9 +154,40 @@ namespace Managers
                         movedPieces.AddNewPieceAndPosition(enemyPiece, MovedPieces.EliminationPosition);
                         EliminatePiece(enemyPiece, isSimulation);
                         break;
-                    //case Shared.MoveType.Castling:
-                    //    throw new NotImplementedException();
-                    //    break;
+                    case Shared.MoveType.ShortCastle:
+                        var sRookToBeCastledPosition = new Vector2Int(newTile.Position.x, newTile.Position.y - 1);
+                        var sRookToBeCastled = ChessPieces[sRookToBeCastledPosition.x, sRookToBeCastledPosition.y];
+                        var sRookToBeCastledNewPosition = new Vector2Int(newTile.Position.x, newTile.Position.y + 1);
+
+                        movedPieces.AddNewPieceAndPosition(sRookToBeCastled, sRookToBeCastledNewPosition);
+                        ChessPieces[sRookToBeCastledPosition.x, sRookToBeCastledPosition.y] = null;
+                        ChessPieces[sRookToBeCastledNewPosition.x, sRookToBeCastledNewPosition.y] = sRookToBeCastled;
+                        sRookToBeCastled.currentX = sRookToBeCastledNewPosition.x;
+                        sRookToBeCastled.currentY = sRookToBeCastledNewPosition.y;
+                        sRookToBeCastled.IsMoved = true;
+
+                        if (!isSimulation)
+                            sRookToBeCastled.transform.position =
+                                TileManager.GetTileCenter(sRookToBeCastled.currentX, sRookToBeCastled.currentY);
+                        sRookToBeCastled.SavePosition();
+                        break;
+                    case Shared.MoveType.LongCastle:
+                        var lRookToBeCastledPosition = new Vector2Int(newTile.Position.x, newTile.Position.y + 2);
+                        var lRookToBeCastled = ChessPieces[lRookToBeCastledPosition.x, lRookToBeCastledPosition.y];
+                        var lRookToBeCastledNewPosition = new Vector2Int(newTile.Position.x, newTile.Position.y - 1);
+
+                        movedPieces.AddNewPieceAndPosition(lRookToBeCastled, lRookToBeCastledNewPosition);
+                        ChessPieces[lRookToBeCastledPosition.x, lRookToBeCastledPosition.y] = null;
+                        ChessPieces[lRookToBeCastledNewPosition.x, lRookToBeCastledNewPosition.y] = lRookToBeCastled;
+                        lRookToBeCastled.currentX = lRookToBeCastledNewPosition.x;
+                        lRookToBeCastled.currentY = lRookToBeCastledNewPosition.y;
+                        lRookToBeCastled.IsMoved = true;
+
+                        if (!isSimulation)
+                            lRookToBeCastled.transform.position =
+                                TileManager.GetTileCenter(lRookToBeCastled.currentX, lRookToBeCastled.currentY);
+                        lRookToBeCastled.SavePosition();
+                        break;
                     //case Shared.MoveType.Promotion:
                     //    throw new NotImplementedException();
                     //    break;
@@ -209,10 +250,14 @@ namespace Managers
 
         public void UndoLastMove()
         {
+            
             var turnToUndo = GameManager.LastTurn;
             if(turnToUndo == null) return;
+            
+            GameManager.History.Remove(turnToUndo);
+            GameManager.LastTurn = GameManager.History.Count == 0 ? null : GameManager.History[^1];
+            
             var movesToUndo = turnToUndo.PiecesMovedInThisTurn;
-
             UndoMove(movesToUndo, false);
             UndoMoveOnBoard(movesToUndo);
             
@@ -221,9 +266,6 @@ namespace Managers
             GenerateAllMoves();
             EvaluateKingStatus();
             EliminateInvalidMoves(GameManager.IsWhiteTurn);
-            
-            GameManager.History.Remove(turnToUndo);
-            GameManager.LastTurn = GameManager.History.Count == 0 ? null : GameManager.History[^1];
         }
 
         private void UndoMove(MovedPieces movesToUndo, bool isSimulation)
@@ -259,7 +301,8 @@ namespace Managers
                 ChessPieces[oldPosition.x, oldPosition.y] = chessPieceToUndo;
                 chessPieceToUndo.currentX = oldPosition.x;
                 chessPieceToUndo.currentY = oldPosition.y;
-                if (chessPieceToUndo.startingPosition == oldPosition) chessPieceToUndo.IsMoved = false;
+                if (chessPieceToUndo.startingPosition == oldPosition &&
+                    !GameManager.IsChessPieceInHistory(chessPieceToUndo)) chessPieceToUndo.IsMoved = false;
                 DetermineEnPassantStatus(chessPieceToUndo, isSimulation);
             }
         }
@@ -382,68 +425,15 @@ namespace Managers
             foreach (var chessPiece in WhitePieces.Select(pieceGameObject => pieceGameObject.GetComponent<ChessPiece>()))
             {
                 chessPiece.CalculateAvailablePositions();
-                
-                var attackedTiles = 
-                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove)).ToList();
-                attackedTiles.AddRange(chessPiece.Moves.AvailableMoves
-                    .Select(avMove => TileManager.GetTile(avMove)).ToList());
-                attackedTiles.AddRange(chessPiece.Moves.SpecialMoves
-                    .Where(sm => sm.MoveType == Shared.MoveType.EnPassant)
-                    .Select(spMove => TileManager.GetTile(spMove.Coords)));
-                
-                foreach (var attackedTile in attackedTiles)
-                {
-                    attackedTile.AttackedBy = attackedTile.AttackedBy switch
-                    {
-                        Shared.AttackedBy.None => Shared.AttackedBy.White,
-                        Shared.AttackedBy.Black => Shared.AttackedBy.Both,
-                        _ => attackedTile.AttackedBy
-                    };
-                    attackedTile.WhiteAttackingPieces.Add(chessPiece);
-                }
-                
-                if (chessPiece is Pawn pawn)
-                {
-                    pawn.Moves.AttackMoves = 
-                        pawn.Moves.AttackMoves.Where(atMove => 
-                                CalculateSpaceOccupation(atMove, pawn.team) == Shared.TileOccupiedBy.EnemyPiece)
-                            .ToList();
-                }
             }
 
             // Calculate all the move positions for the Black Pieces and populate the Attacking Pieces/Status of the Tiles
             foreach (var chessPiece in BlackPieces.Select(pieceGameObject => pieceGameObject.GetComponent<ChessPiece>()))
             {
                 chessPiece.GetComponent<ChessPiece>().CalculateAvailablePositions();
-
-                var attackedTiles = 
-                    chessPiece.Moves.AttackMoves.Select(attackMove => TileManager.GetTile(attackMove)).ToList();
-                attackedTiles.AddRange(chessPiece.Moves.AvailableMoves
-                    .Select(avMove => TileManager.GetTile(avMove)).ToList());
-                attackedTiles.AddRange(chessPiece.Moves.SpecialMoves
-                    .Where(sm => sm.MoveType == Shared.MoveType.EnPassant)
-                    .Select(spMove => TileManager.GetTile(spMove.Coords)));
-                
-                foreach (var attackedTile in attackedTiles)
-                {
-                    attackedTile.AttackedBy = attackedTile.AttackedBy switch
-                    {
-                        Shared.AttackedBy.None => Shared.AttackedBy.Black,
-                        Shared.AttackedBy.White => Shared.AttackedBy.Both,
-                        _ => attackedTile.AttackedBy
-                    };
-                    attackedTile.BlackAttackingPieces.Add(chessPiece);
-                }
-
-                if (chessPiece is Pawn pawn)
-                {
-                    pawn.Moves.AttackMoves = 
-                        pawn.Moves.AttackMoves.Where(atMove => 
-                            CalculateSpaceOccupation(atMove, pawn.team) == Shared.TileOccupiedBy.EnemyPiece)
-                            .ToList();
-                }
-                
             }
+            
+            TileManager.DetermineAttackStatus();
         }
 
         private void EliminateInvalidMoves(bool isCurrentTeamWhite)
@@ -456,7 +446,7 @@ namespace Managers
             var protectedKing = isCurrentTeamWhite ? whiteKing : blackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
 
-            foreach (var fPiece in friendlyPieces)
+            foreach (var fPiece in friendlyPieces.ToList())
             {
                 var currentPieceTile = ((King)protectedKing).isChecked
                     ? TileManager.GetTile(new Vector2Int(protectedKing.currentX, protectedKing.currentY))
@@ -468,129 +458,179 @@ namespace Managers
                     ? currentPieceTile.BlackAttackingPieces
                     : currentPieceTile.WhiteAttackingPieces;
 
-                var attackMovesToBeRemoved = new List<Vector2Int>();
-                foreach (var move in fPiece.Moves.AttackMoves)
-                {
-                    // Simulate Move
-                    var moveToTile = TileManager.GetTile(move);
-                    moveToTile.IsAttackTile = true;
-                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
-                    
-                    if (fPiece == protectedKing)
-                        piecesAttackingTheTile = isCurrentTeamWhite
-                            ? moveToTile.BlackAttackingPieces
-                            : moveToTile.WhiteAttackingPieces;
-                    
-                    // Calculate protected king check status
-                    var markMoveForExclusion = false;
-                    foreach (var attackingPiece in piecesAttackingTheTile)
-                    {
-                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
-                        var attackMoves = moves.AttackMoves;
-                        var attackSpecialMoves =
-                            moves.SpecialMoves
-                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
-                                .Select(sMove => sMove.Coords);
-
-                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
-                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX,
-                                protectedKing.currentY)))
-                            continue;
-                        
-                        markMoveForExclusion = true;
-                        break;
-                    }
-
-                    if (markMoveForExclusion) attackMovesToBeRemoved.Add(move);
-
-                        // Undo simulated Move
-                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
-                    moveToTile.IsAttackTile = false;
-                }
+                // Remove invalid attack moves
+                var attackMovesToBeRemoved = MovesToBeRemoved(fPiece, piecesAttackingTheTile, protectedKing,
+                    fPiece.Moves.AttackMoves, true, false);
                 foreach (var removedMove in attackMovesToBeRemoved)
                     fPiece.Moves.AttackMoves.Remove(removedMove);
-                
 
-                var availableMovesToBeRemoved = new List<Vector2Int>();
-                foreach (var move in fPiece.Moves.AvailableMoves)
-                {
-                    var moveToTile = TileManager.GetTile(move); 
-                    moveToTile.IsAvailableTile = true;
-                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
-
-                    if (fPiece == protectedKing)
-                        piecesAttackingTheTile = isCurrentTeamWhite
-                            ? moveToTile.BlackAttackingPieces
-                            : moveToTile.WhiteAttackingPieces;
-
-                    var markMoveForExclusion = false;
-                    foreach (var attackingPiece in piecesAttackingTheTile)
-                    {
-                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
-                        var attackMoves = moves.AttackMoves;
-                        var attackSpecialMoves =
-                            moves.SpecialMoves
-                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
-                                .Select(sMove => sMove.Coords);
-
-                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
-                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
-                            continue;
-                        
-                        markMoveForExclusion = true;
-                        break;
-                    }
-
-                    if (markMoveForExclusion) availableMovesToBeRemoved.Add(move);
-                    
-                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
-                    moveToTile.IsAvailableTile = false;
-                }
-
+                // Remove invalid available moves
+                var availableMovesToBeRemoved = MovesToBeRemoved(fPiece, piecesAttackingTheTile, protectedKing,
+                    fPiece.Moves.AvailableMoves, false, true);
                 foreach (var removedMove in availableMovesToBeRemoved)
                     fPiece.Moves.AvailableMoves.Remove(removedMove);
 
+                // Remove special moves
                 var specialMovesToBeRemoved = new List<SpecialMove>();
-                foreach (var move in fPiece.Moves.SpecialMoves)
+                foreach (var move in fPiece.Moves.SpecialMoves.ToList())
                 {
                     var moveToTile = TileManager.GetTile(move.Coords); 
                     moveToTile.IsSpecialTile = true;
                     moveToTile.IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
-                    var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move.Coords), true);
-                    
-                    if (fPiece == protectedKing)
-                        piecesAttackingTheTile = isCurrentTeamWhite
-                            ? moveToTile.BlackAttackingPieces
-                            : moveToTile.WhiteAttackingPieces;
-                    
-                    var markMoveForExclusion = false;
-                    foreach (var attackingPiece in piecesAttackingTheTile)
+                    moveToTile.IsAvailableTile = move.MoveType is Shared.MoveType.ShortCastle
+                        or Shared.MoveType.Promotion or Shared.MoveType.LongCastle;
+
+                    if (move.MoveType is Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle)
                     {
-                        var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
-                        var attackMoves = moves.AttackMoves;
-                        var attackSpecialMoves =
-                            moves.SpecialMoves
-                                .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
-                                .Select(sMove => sMove.Coords);
-
-                        if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
-                            !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
-                            continue;
+                        var attackingEnemyTeam = fPiece.team == Shared.TeamType.White
+                            ? Shared.AttackedBy.Black
+                            : Shared.AttackedBy.White;
                         
-                        markMoveForExclusion = true;
-                        break;
-                    }
+                        if (((King)protectedKing).isChecked)
+                        {
+                            specialMovesToBeRemoved.Add(move);
+                            continue;
+                        }
 
-                    if (markMoveForExclusion) specialMovesToBeRemoved.Add(move);
+                        switch (move.MoveType)
+                        {
+                            case Shared.MoveType.ShortCastle:
+                                var shortCastleKingStart = fPiece.startingPosition;
+                                var shortCastleRookEnd = new Vector2Int(move.Coords.x, move.Coords.y - 1);
+
+                                for (var yChecks = shortCastleKingStart.y - 1; yChecks <= shortCastleRookEnd.y + 1; yChecks--)
+                                {
+                                    var currentCheckingPosition = new Vector2Int(shortCastleKingStart.x, yChecks);
+                                    if (CalculateSpaceOccupation(currentCheckingPosition, fPiece.team) !=
+                                        Shared.TileOccupiedBy.None)
+                                    {
+                                        specialMovesToBeRemoved.Add(move);
+                                        break;
+                                    }
+
+                                    var currentCheckingTile = TileManager.GetTile(currentCheckingPosition);
+                                    if (currentCheckingTile.AttackedBy == attackingEnemyTeam ||
+                                         currentCheckingTile.AttackedBy == Shared.AttackedBy.Both)
+                                    {
+                                        specialMovesToBeRemoved.Add(move);
+                                        break;
+                                    }
+                                }
+                                
+                                break;
+                            case Shared.MoveType.LongCastle:
+                                var longCastleKingStart = fPiece.startingPosition;
+                                var longCastleKingEnd = move.Coords;
+                                var longCastleRookEnd = new Vector2Int(move.Coords.x, move.Coords.y + 2);
+                                for (var yChecks = longCastleKingStart.y + 1; yChecks <= longCastleRookEnd.y - 1; yChecks++)
+                                {
+                                    var currentCheckingPosition = new Vector2Int(longCastleKingStart.x, yChecks);
+                                    if (CalculateSpaceOccupation(currentCheckingPosition, fPiece.team) !=
+                                        Shared.TileOccupiedBy.None)
+                                    {
+                                        specialMovesToBeRemoved.Add(move);
+                                        break;
+                                    }
+
+                                    var currentCheckingTile = TileManager.GetTile(currentCheckingPosition);
+                                    if (yChecks <= longCastleKingEnd.y &&
+                                        (currentCheckingTile.AttackedBy == attackingEnemyTeam ||
+                                         currentCheckingTile.AttackedBy == Shared.AttackedBy.Both))
+                                    {
+                                        specialMovesToBeRemoved.Add(move);
+                                        break;
+                                    }
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move.Coords), true);
                     
-                    UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
-                    TileManager.GetTile(move.Coords).IsSpecialTile = false;
-                    TileManager.GetTile(move.Coords).IsAttackTile = false;
+                        if (fPiece == protectedKing)
+                            piecesAttackingTheTile = isCurrentTeamWhite
+                                ? moveToTile.BlackAttackingPieces
+                                : moveToTile.WhiteAttackingPieces;
+                    
+                        var markMoveForExclusion = false;
+                        foreach (var attackingPiece in piecesAttackingTheTile.ToList())
+                        {
+                            var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
+                            var attackMoves = moves.AttackMoves;
+                            var attackSpecialMoves =
+                                moves.SpecialMoves
+                                    .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
+                                    .Select(sMove => sMove.Coords)
+                                    .ToList();
+
+                            if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
+                                !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
+                                continue;
+                        
+                            markMoveForExclusion = true;
+                            break;
+                        }
+
+                        if (markMoveForExclusion) specialMovesToBeRemoved.Add(move);
+                    
+                        UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
+                        TileManager.GetTile(move.Coords).IsSpecialTile = false;
+                        TileManager.GetTile(move.Coords).IsAttackTile = false;
+                    }
                 }
 
                 foreach (var removedMove in specialMovesToBeRemoved)
                     fPiece.Moves.SpecialMoves.Remove(removedMove);
             }
+        }
+
+        private List<Vector2Int> MovesToBeRemoved(ChessPiece fPiece, List<ChessPiece> piecesAttackingTheTile,
+            ChessPiece protectedKing, List<Vector2Int> fPieceMoves, bool areAttackMoves, bool areAvailableMoves)
+        {
+            var movesToBeRemoved = new List<Vector2Int>();
+
+            foreach (var move in fPieceMoves)
+            {
+                // Simulate Move
+                var moveToTile = TileManager.GetTile(move);
+                moveToTile.IsAttackTile = areAttackMoves;
+                moveToTile.IsAvailableTile = areAvailableMoves;
+                var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
+
+                if (fPiece == protectedKing)
+                    piecesAttackingTheTile.AddRange(fPiece.team == Shared.TeamType.White
+                        ? moveToTile.BlackAttackingPieces
+                        : moveToTile.WhiteAttackingPieces);
+
+                // Calculate protected king check status
+                var markMoveForExclusion = false;
+                foreach (var attackingPiece in piecesAttackingTheTile.ToList())
+                {
+                    var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
+                    var attackMoves = moves.AttackMoves;
+                    var attackSpecialMoves =
+                        moves.SpecialMoves
+                            .FindAll(sMove => sMove.MoveType == Shared.MoveType.EnPassant)
+                            .Select(sMove => sMove.Coords)
+                            .ToList();
+
+                    if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)) &&
+                        !attackSpecialMoves.Contains(new Vector2Int(protectedKing.currentX,
+                            protectedKing.currentY)))
+                        continue;
+
+                    markMoveForExclusion = true;
+                    break;
+                }
+
+                if (markMoveForExclusion) movesToBeRemoved.Add(move);
+                UndoMove(simulatedTurn.PiecesMovedInThisTurn, true);
+                moveToTile.IsAttackTile = false;
+                moveToTile.IsAvailableTile = false;
+            }
+
+            return movesToBeRemoved;
         }
 
         private void EvaluateKingStatus()
@@ -607,6 +647,10 @@ namespace Managers
             }
             
             ((King)king).isChecked = true;
+            TileManager.UpdateTileMaterial(kingCoords,
+                TileManager.GetTile(kingCoords).IsWhiteTile
+                    ? Shared.TileType.AttackTileWhite
+                    : Shared.TileType.AttackTileBlack);
         }
     }
 }

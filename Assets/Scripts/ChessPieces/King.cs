@@ -36,6 +36,8 @@ namespace ChessPieces
             possibleMoves.ForEach(move =>
             {
                 var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
+                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(move);
+                
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
@@ -46,6 +48,18 @@ namespace ChessPieces
                         break;
                 }
             });
+
+            if (isMoved) return;
+            
+            Vector2Int castleShort = new(currentX, currentY - 2);
+            var castleShortRook = MovementManager.ChessPieces[castleShort.x, castleShort.y - 1];
+            if (castleShortRook != null && castleShortRook is Rook shortRook && !shortRook.IsMoved)
+                Moves.SpecialMoves.Add(new SpecialMove(castleShort, Shared.MoveType.ShortCastle));
+
+            Vector2Int castleLong = new(currentX, currentY + 2);
+            var castleLongRook = MovementManager.ChessPieces[castleShort.x, castleShort.y + 2];
+            if (castleLongRook != null && castleLongRook is Rook longRook && !longRook.IsMoved)
+                Moves.SpecialMoves.Add(new SpecialMove(castleLong, Shared.MoveType.LongCastle));
         }
     }
 }

@@ -25,10 +25,20 @@ namespace ChessPieces
             }
 
             Vector2Int attackMoveLeft = new(currentX + (direction * 1), currentY + 1);
-            if (Shared.TileOccupiedBy.EndOfTable != MovementManager.CalculateSpaceOccupation(attackMoveLeft, team)) Moves.AttackMoves.Add(attackMoveLeft);
+            var leftOccupationStatus = MovementManager.CalculateSpaceOccupation(attackMoveLeft, team);
+            if (leftOccupationStatus != Shared.TileOccupiedBy.EndOfTable)
+            {
+                AddToTileAttackingPieces(attackMoveLeft);
+                if(leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece) Moves.AttackMoves.Add(attackMoveLeft);
+            }
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
-            if (Shared.TileOccupiedBy.EndOfTable != MovementManager.CalculateSpaceOccupation(attackMoveRight, team)) Moves.AttackMoves.Add(attackMoveRight);
+            var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(attackMoveRight, team);
+            if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
+            {
+                AddToTileAttackingPieces(attackMoveRight);
+                if(rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece) Moves.AttackMoves.Add(attackMoveRight);
+            }
             
             Moves.SpecialMoves = CalculateSpecialMoves();
         }
@@ -60,6 +70,8 @@ namespace ChessPieces
                 
                 var specialMove = new SpecialMove(possibleEnPassantAttack[i], Shared.MoveType.EnPassant);
                 moves.Add(specialMove);
+
+                AddToTileAttackingPieces(specialMove.Coords);
             }
             
             return moves;

@@ -88,6 +88,14 @@ namespace Managers
             }
         }
 
+        public void DetermineAttackStatus()
+        {
+            foreach (var tile in Tiles)
+            {
+                tile.GetComponent<Tile>().DetermineAttackStatus();
+            }
+        }
+        
         public Tile GetTile(Vector2Int tileCoord)
         {
             return GetTile(tileCoord.x, tileCoord.y);

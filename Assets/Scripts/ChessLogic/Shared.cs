@@ -48,7 +48,8 @@ namespace ChessLogic
         public enum MoveType
         {
             EnPassant,
-            Castling,
+            ShortCastle,
+            LongCastle,
             Promotion,
             Normal
         }
@@ -75,11 +76,11 @@ namespace ChessLogic
                 Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
                 var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(possibleMove, chessPiece.team);
 
-                if (occupationType is TileOccupiedBy.FriendlyPiece or TileOccupiedBy.EndOfTable)
-                {
-                    break;
-                }
+                if (occupationType is TileOccupiedBy.EndOfTable) break;
 
+                chessPiece.AddToTileAttackingPieces(possibleMove);
+                
+                if (occupationType is TileOccupiedBy.FriendlyPiece) break;
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
                     moves.AttackMoves.Add(possibleMove);
