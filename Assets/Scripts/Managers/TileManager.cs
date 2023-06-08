@@ -43,6 +43,7 @@ namespace Managers
                 UpdateTileMaterial(new Vector2Int(move.Coords.x, move.Coords.y), Shared.TileType.Default);
                 Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsSpecialTile = false;                
                 Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAttackTile = false;
+                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAvailableTile = false;
             }
 
         }

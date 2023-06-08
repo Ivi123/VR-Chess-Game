@@ -57,7 +57,7 @@ namespace ChessPieces
                 Moves.SpecialMoves.Add(new SpecialMove(castleShort, Shared.MoveType.ShortCastle));
 
             Vector2Int castleLong = new(currentX, currentY + 2);
-            var castleLongRook = MovementManager.ChessPieces[castleShort.x, castleShort.y + 2];
+            var castleLongRook = MovementManager.ChessPieces[castleLong.x, castleLong.y + 2];
             if (castleLongRook != null && castleLongRook is Rook longRook && !longRook.IsMoved)
                 Moves.SpecialMoves.Add(new SpecialMove(castleLong, Shared.MoveType.LongCastle));
         }

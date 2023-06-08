@@ -165,6 +165,7 @@ namespace Managers
                         sRookToBeCastled.currentX = sRookToBeCastledNewPosition.x;
                         sRookToBeCastled.currentY = sRookToBeCastledNewPosition.y;
                         sRookToBeCastled.IsMoved = true;
+                        turn.MoveType = Shared.MoveType.ShortCastle;
 
                         if (!isSimulation)
                             sRookToBeCastled.transform.position =
@@ -182,6 +183,7 @@ namespace Managers
                         lRookToBeCastled.currentX = lRookToBeCastledNewPosition.x;
                         lRookToBeCastled.currentY = lRookToBeCastledNewPosition.y;
                         lRookToBeCastled.IsMoved = true;
+                        turn.MoveType = Shared.MoveType.LongCastle;
 
                         if (!isSimulation)
                             lRookToBeCastled.transform.position =
@@ -436,7 +438,7 @@ namespace Managers
             TileManager.DetermineAttackStatus();
         }
 
-        private void EliminateInvalidMoves(bool isCurrentTeamWhite)
+        public void EliminateInvalidMoves(bool isCurrentTeamWhite)
         {
             var friendlyPieces =
                 isCurrentTeamWhite
@@ -448,9 +450,7 @@ namespace Managers
 
             foreach (var fPiece in friendlyPieces.ToList())
             {
-                var currentPieceTile = ((King)protectedKing).isChecked
-                    ? TileManager.GetTile(new Vector2Int(protectedKing.currentX, protectedKing.currentY))
-                    : TileManager.GetTile(fPiece.currentX, fPiece.currentY);
+                var currentPieceTile = TileManager.GetTile(fPiece.currentX, fPiece.currentY);
                 if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing) continue;
                 if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing) continue;
                 
@@ -474,11 +474,7 @@ namespace Managers
                 var specialMovesToBeRemoved = new List<SpecialMove>();
                 foreach (var move in fPiece.Moves.SpecialMoves.ToList())
                 {
-                    var moveToTile = TileManager.GetTile(move.Coords); 
-                    moveToTile.IsSpecialTile = true;
-                    moveToTile.IsAttackTile = move.MoveType == Shared.MoveType.EnPassant;
-                    moveToTile.IsAvailableTile = move.MoveType is Shared.MoveType.ShortCastle
-                        or Shared.MoveType.Promotion or Shared.MoveType.LongCastle;
+                    var moveToTile = TileManager.GetTile(move.Coords);
 
                     if (move.MoveType is Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle)
                     {
@@ -498,7 +494,7 @@ namespace Managers
                                 var shortCastleKingStart = fPiece.startingPosition;
                                 var shortCastleRookEnd = new Vector2Int(move.Coords.x, move.Coords.y - 1);
 
-                                for (var yChecks = shortCastleKingStart.y - 1; yChecks <= shortCastleRookEnd.y + 1; yChecks--)
+                                for (var yChecks = shortCastleKingStart.y - 1; yChecks >= shortCastleRookEnd.y + 1; yChecks--)
                                 {
                                     var currentCheckingPosition = new Vector2Int(shortCastleKingStart.x, yChecks);
                                     if (CalculateSpaceOccupation(currentCheckingPosition, fPiece.team) !=
@@ -598,7 +594,7 @@ namespace Managers
                 moveToTile.IsAvailableTile = areAvailableMoves;
                 var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
 
-                if (fPiece == protectedKing)
+                if (fPiece == protectedKing || ((King)protectedKing).isChecked)
                     piecesAttackingTheTile.AddRange(fPiece.team == Shared.TeamType.White
                         ? moveToTile.BlackAttackingPieces
                         : moveToTile.WhiteAttackingPieces);

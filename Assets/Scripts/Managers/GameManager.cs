@@ -53,6 +53,7 @@ namespace Managers
             chessboard.StartGame();
             movementManager.GenerateAllMoves();
             IsWhiteTurn = true;
+            movementManager.EliminateInvalidMoves(IsWhiteTurn);
             movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
         }
 
