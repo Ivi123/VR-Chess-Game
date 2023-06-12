@@ -447,12 +447,13 @@ namespace Managers
 
             var protectedKing = isCurrentTeamWhite ? whiteKing : blackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
+            var isKingChecked = ((King)protectedKing).isChecked;
 
             foreach (var fPiece in friendlyPieces.ToList())
             {
                 var currentPieceTile = TileManager.GetTile(fPiece.currentX, fPiece.currentY);
-                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing) continue;
-                if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing) continue;
+                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing && !isKingChecked) continue;
+                if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing && !isKingChecked) continue;
                 
                 var piecesAttackingTheTile = isCurrentTeamWhite
                     ? currentPieceTile.BlackAttackingPieces
@@ -482,7 +483,7 @@ namespace Managers
                             ? Shared.AttackedBy.Black
                             : Shared.AttackedBy.White;
                         
-                        if (((King)protectedKing).isChecked)
+                        if (isKingChecked)
                         {
                             specialMovesToBeRemoved.Add(move);
                             continue;
@@ -585,23 +586,34 @@ namespace Managers
             ChessPiece protectedKing, List<Vector2Int> fPieceMoves, bool areAttackMoves, bool areAvailableMoves)
         {
             var movesToBeRemoved = new List<Vector2Int>();
+            var kingIsChecked = ((King)protectedKing).isChecked;
+            var kingTile = TileManager.GetTile(protectedKing.currentX, protectedKing.currentY);
+
 
             foreach (var move in fPieceMoves)
             {
-                // Simulate Move
                 var moveToTile = TileManager.GetTile(move);
                 moveToTile.IsAttackTile = areAttackMoves;
                 moveToTile.IsAvailableTile = areAvailableMoves;
-                var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
+                
+                var piecesAttackingVitalTiles = new List<ChessPiece>(piecesAttackingTheTile);
 
-                if (fPiece == protectedKing || ((King)protectedKing).isChecked)
-                    piecesAttackingTheTile.AddRange(fPiece.team == Shared.TeamType.White
+                if (kingIsChecked)
+                    piecesAttackingVitalTiles.AddRange(fPiece.team == Shared.TeamType.White
+                        ? kingTile.BlackAttackingPieces
+                        : kingTile.WhiteAttackingPieces);
+                
+                if (fPiece == protectedKing || kingIsChecked)
+                    piecesAttackingVitalTiles.AddRange(fPiece.team == Shared.TeamType.White
                         ? moveToTile.BlackAttackingPieces
                         : moveToTile.WhiteAttackingPieces);
+                
+                // Simulate Move
+                var simulatedTurn = MakeMove(fPiece, TileManager.GetTile(move), true);
 
                 // Calculate protected king check status
                 var markMoveForExclusion = false;
-                foreach (var attackingPiece in piecesAttackingTheTile.ToList())
+                foreach (var attackingPiece in piecesAttackingVitalTiles.ToList())
                 {
                     var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
                     var attackMoves = moves.AttackMoves;
