@@ -29,7 +29,7 @@ namespace ChessPieces
         public Material Material { get; set; }
 
         // Logic
-        private Quaternion desiredRotation;
+        public Quaternion DesiredRotation { get; set; }
         private Vector3 position;
         protected bool isMoved = false;
         public Moves Moves { get; set; }
@@ -58,9 +58,12 @@ namespace ChessPieces
             transform.Find(Shared.TileDetectorName).gameObject.GetComponent<BoxCollider>().enabled = false;
             MovementManager.PieceWasDropped(currentX, currentY, HoveringTile);
 
-            transform.SetPositionAndRotation(position, desiredRotation);
+            transform.SetPositionAndRotation(position, DesiredRotation);
             transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             HoveringTile = null;
+
+            if (!MovementManager.GameManager.IsPlayerTurn)
+                MovementManager.GameManager.MakeBotTurn();
         }
 
         public void SavePosition()
@@ -72,7 +75,7 @@ namespace ChessPieces
         public void SaveOrientation()
         {
             var rotation = GetComponent<Transform>().transform.rotation;
-            desiredRotation = new Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+            DesiredRotation = new Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
         }
 
         public void RevertToOriginalMaterial()

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ChessLogic;
 using ChessPieces;
-using JetBrains.Annotations;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -22,6 +20,7 @@ namespace Managers
         private ChessPiece whiteKing;
         public List<GameObject> BlackPieces { get; set; }
         private ChessPiece blackKing;
+        public bool currentTeamHasMoves;
         
         // Elimination Related Properties
         public LinkedList<Vector3> FreeWhiteEliminationPosition { get; set; }
@@ -109,19 +108,12 @@ namespace Managers
             // Update the ChessPieces matrix with the new format after a chess piece was moved. The method returns
             // the turn that was just made with all the moved pieces and the changes in positions
             var turn = MakeMove(chessPiece, newTile, false);
-            if(turn != null) GameManager.AdvanceTurn(turn);
-            
-            TileManager.UpdateTileMaterialAfterMove(chessPiece);
-            // Change back the Available/Attack/Special Tiles material back to the default value 
-            if(turn == null) return;
-            GenerateAllMoves();
+            if (turn == null) TileManager.UpdateTileMaterialAfterMove(chessPiece);
 
-            //Evaluate new King status after turn advance so we can see if he's in check or not
-            EvaluateKingStatus();
-            EliminateInvalidMoves(GameManager.IsWhiteTurn);
+            if(turn != null) GameManager.AdvanceTurn(turn);
         }
 
-        private Turn MakeMove(ChessPiece chessPiece, Tile newTile, bool isSimulation)
+        public Turn MakeMove(ChessPiece chessPiece, Tile newTile, bool isSimulation)
         {
             if (newTile == null) return null;
             
@@ -193,10 +185,6 @@ namespace Managers
                     //case Shared.MoveType.Promotion:
                     //    throw new NotImplementedException();
                     //    break;
-                    //case Shared.MoveType.Normal:
-                    //    break;
-                    //default:
-                    //    throw new ArgumentOutOfRangeException();
                 }
             }
             
@@ -332,6 +320,7 @@ namespace Managers
             }
             catch (Exception e)
             {
+                Debug.Log(e.Message);
                 return;
             }
 
@@ -589,7 +578,6 @@ namespace Managers
             var kingIsChecked = ((King)protectedKing).isChecked;
             var kingTile = TileManager.GetTile(protectedKing.currentX, protectedKing.currentY);
 
-
             foreach (var move in fPieceMoves)
             {
                 var moveToTile = TileManager.GetTile(move);
@@ -641,7 +629,7 @@ namespace Managers
             return movesToBeRemoved;
         }
 
-        private void EvaluateKingStatus()
+        public void EvaluateKingStatus()
         {
             var king = GameManager.IsWhiteTurn ? whiteKing : blackKing;
             var ignoredAttacks = GameManager.IsWhiteTurn ? Shared.AttackedBy.White : Shared.AttackedBy.Black;

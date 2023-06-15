@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 5522058042531811974}
   - component: {fileID: 5522058042531811975}
   - component: {fileID: 5522058042531811978}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: King
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -304,6 +304,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team: 0
+  startingPosition: {x: 0, y: 0}
   currentX: 0
   currentY: 0
   type: 6
+  isChecked: 0

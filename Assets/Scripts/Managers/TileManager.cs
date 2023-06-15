@@ -1,8 +1,6 @@
 using ChessLogic;
 using ChessPieces;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Managers
 {

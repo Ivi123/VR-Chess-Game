@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4514600616988653377}
   - component: {fileID: 4514600616988653378}
   - component: {fileID: 4514600616988653381}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Pawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -304,6 +304,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   team: 0
+  startingPosition: {x: 0, y: 0}
   currentX: 0
   currentY: 0
   type: 1

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ChessLogic;
@@ -18,7 +19,9 @@ namespace Managers
         public MovementManager movementManager;
         public TileManager tileManager;
         public GameObject xrOrigin;
+        public BotPlayer botPlayer;
         public bool IsWhiteTurn { get; private set; }
+        public bool IsPlayerTurn { get; set; }
 
         // Game History
         public List<Turn> History { get; set; }
@@ -27,6 +30,8 @@ namespace Managers
 
         // Player Info and team selection
         private Shared.TeamType playersTeam;
+        private List<GameObject> playersPieces;
+        private List<GameObject> botPieces;
         private Vector3 playingPosition;
         public List<GameObject> teamSelectors;
 
@@ -41,13 +46,15 @@ namespace Managers
             chessboard.MovementManager = movementManager;
             chessboard.TileManager = tileManager;
             movementManager.GameManager = this;
+            botPlayer.MovementManager = movementManager;
+            botPlayer.TileManager = tileManager;
 
             if (mockTeamSelection)
             {
                 SelectTeam(mockTeamType, transform.position);
             }
         }
-
+        
         private void StartGame()
         {
             chessboard.StartGame();
@@ -55,6 +62,17 @@ namespace Managers
             IsWhiteTurn = true;
             movementManager.EliminateInvalidMoves(IsWhiteTurn);
             movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
+            
+            playersPieces = playersTeam == Shared.TeamType.White
+                ? movementManager.WhitePieces
+                : movementManager.BlackPieces;
+            botPieces = playersTeam == Shared.TeamType.White
+                ? movementManager.BlackPieces
+                : movementManager.WhitePieces;
+            IsPlayerTurn = playersTeam == Shared.TeamType.White;
+
+            if (IsPlayerTurn) return;
+            MakeBotTurn();
         }
 
         public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition)
@@ -77,13 +95,26 @@ namespace Managers
             History.Add(currentTurn);
             LastTurn = currentTurn;
             SwitchTurn();
+            
+            tileManager.UpdateTileMaterialAfterMove(LastTurn.PiecesMovedInThisTurn.Pieces[^1]);
+
+            movementManager.GenerateAllMoves();
+            movementManager.EvaluateKingStatus();
+            movementManager.EliminateInvalidMoves(IsWhiteTurn);
         }
 
+        public void MakeBotTurn()
+        {
+            var botTurn =
+                botPlayer.BotMakeMove(botPieces.Select(piece => piece.GetComponent<ChessPiece>()).ToList());
+            AdvanceTurn(botTurn);
+        }
+        
         public void SwitchTurn()
         {
             IsWhiteTurn = !IsWhiteTurn;
-            movementManager.DisableOrEnablePickUpOnPieces(movementManager.WhitePieces);
-            movementManager.DisableOrEnablePickUpOnPieces(movementManager.BlackPieces);
+            IsPlayerTurn = !IsPlayerTurn;
+            movementManager.DisableOrEnablePickUpOnPieces(playersPieces);
         }
 
         private void DisableEnPassantTargetOnLastTurnPiece()
