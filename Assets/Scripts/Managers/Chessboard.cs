@@ -174,7 +174,7 @@ namespace Managers
         
             var cp = cpGameObject.GetComponent<ChessPiece>();
             cp.GetComponent<ChessPiece>().MovementManager = MovementManager;
-            cp.GetComponent<ChessPiece>().Moves = new Moves();
+            cp.GetComponent<ChessPiece>().Moves = new List<Move>();
         
             cp.type = type;
             cp.team = team;

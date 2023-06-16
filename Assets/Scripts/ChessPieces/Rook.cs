@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ChessLogic;
 
 namespace ChessPieces
@@ -6,13 +7,12 @@ namespace ChessPieces
     {
         public override void CalculateAvailablePositions()
         {
-            Moves = new Moves();
-            
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1);
-        }
+            Moves = new List<Move>();
 
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 0));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, 1));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 0));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 0, -1));
+        }
     }
 }

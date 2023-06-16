@@ -72,16 +72,16 @@ namespace ChessLogic
             Continue
         }
         
-        public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)
+        public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece chessPiece, int stepX, int stepY)
         {
-            List<Vector2Int> possibleMoves = new();
+            List<Move> possibleMoves = new();
 
             while (true)
             {
                 var lastAddedMove =
                     possibleMoves.Count == 0
                         ? new Vector2Int(chessPiece.currentX, chessPiece.currentY)
-                        : possibleMoves[^1];
+                        : possibleMoves[^1].Coords;
 
                 Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
                 var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(possibleMove, chessPiece.team);
@@ -93,15 +93,14 @@ namespace ChessLogic
                 if (occupationType is TileOccupiedBy.FriendlyPiece) break;
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
-                    moves.AttackMoves.Add(possibleMove);
+                    possibleMoves.Add(new Move(possibleMove, MoveType.Attack));
                     break;
                 }
 
-                moves.AvailableMoves.Add(possibleMove);
-                possibleMoves.Add(possibleMove);
+                possibleMoves.Add(new Move(possibleMove, MoveType.Normal));
             }
 
+            return possibleMoves;
         }
-
     }
 }

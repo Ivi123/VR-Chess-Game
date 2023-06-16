@@ -10,17 +10,19 @@ namespace ChessPieces
         
         public override void CalculateAvailablePositions()
         {
-            Moves = new Moves();
+            Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
             Vector2Int possibleMoveOneTileAhead = new(currentX + (direction * 1), currentY);
             if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveOneTileAhead, team))
             {
-                Moves.AvailableMoves.Add(possibleMoveOneTileAhead);
+                Moves.Add(new Move(possibleMoveOneTileAhead, Shared.MoveType.Normal));
                 if (!isMoved)
                 {
                     Vector2Int possibleMoveTwoTilesAhead = new(currentX + (direction * 2), currentY);
-                    if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team)) Moves.AvailableMoves.Add(possibleMoveTwoTilesAhead);
+                    if (Shared.TileOccupiedBy.None ==
+                        MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team))
+                        Moves.Add(new Move(possibleMoveTwoTilesAhead, Shared.MoveType.Normal));
                 }
             }
 
@@ -29,7 +31,8 @@ namespace ChessPieces
             if (leftOccupationStatus != Shared.TileOccupiedBy.EndOfTable)
             {
                 AddToTileAttackingPieces(attackMoveLeft);
-                if(leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece) Moves.AttackMoves.Add(attackMoveLeft);
+                if (leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece)
+                    Moves.Add(new Move(attackMoveLeft, Shared.MoveType.Attack));
             }
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
@@ -37,15 +40,16 @@ namespace ChessPieces
             if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
             {
                 AddToTileAttackingPieces(attackMoveRight);
-                if(rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece) Moves.AttackMoves.Add(attackMoveRight);
+                if (rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece)
+                    Moves.Add(new Move(attackMoveRight, Shared.MoveType.Attack));
             }
-            
-            Moves.SpecialMoves = CalculateSpecialMoves();
+
+            Moves.AddRange(CalculateSpecialMoves());
         }
 
-        private List<SpecialMove> CalculateSpecialMoves()
+        private List<Move> CalculateSpecialMoves()
         {
-            List<SpecialMove> moves = new();
+            List<Move> moves = new();
             
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
             List<Vector2Int> possibleEnPassantTarget = new()
@@ -68,7 +72,7 @@ namespace ChessPieces
                 var enemyPiece = MovementManager.GetChessPiece(possibleEnPassantTarget[i]);
                 if (enemyPiece is not Pawn pawn || !pawn.IsEnPassantTarget) continue;
                 
-                var specialMove = new SpecialMove(possibleEnPassantAttack[i], Shared.MoveType.EnPassant);
+                var specialMove = new Move(possibleEnPassantAttack[i], Shared.MoveType.EnPassant);
                 moves.Add(specialMove);
 
                 AddToTileAttackingPieces(specialMove.Coords);

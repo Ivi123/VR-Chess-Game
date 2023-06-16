@@ -46,7 +46,7 @@ namespace ChessPieces
         public Quaternion DesiredRotation { get; set; }
         private Vector3 position;
         protected bool isMoved = false;
-        public Moves Moves { get; set; }
+        public List<Move> Moves { get; set; }
 
         public bool IsMoved { get => isMoved; set => isMoved = value; }
         public Tile HoveringTile { get; set; }
@@ -105,42 +105,24 @@ namespace ChessPieces
         {
             GetComponent<MeshRenderer>().material = Material;
         }
-
-        public List<Vector2Int> GetAllPossibleMoves()
-        {
-            var allMoves = Moves.AvailableMoves.Select(move => new Vector2Int(move.x, move.y)).ToList();
-            allMoves.AddRange(Moves.AttackMoves.Select(move => new Vector2Int(move.x, move.y)).ToList());
-
-            return allMoves;
-        }
         
         public abstract void CalculateAvailablePositions();
 
-        public Moves CalculateAvailablePositionsWithoutUpdating()
+        public List<Move> CalculateAvailablePositionsWithoutUpdating()
         {
             if (currentX == -1 && currentY == -1)
             {
-                return new Moves();
+                return new List<Move>();
             } 
             
             // Save Old Moves
-            var oldMoves = new Moves
-            {
-                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
-                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
-                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
-            };
+            var oldMoves = new List<Move>(Moves);
 
             //Calculate new moves
             CalculateAvailablePositions();
 
             // Save New Moves in a separate field 
-            var newMoves = new Moves
-            {
-                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
-                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
-                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
-            };
+            var newMoves = new List<Move>(Moves);
 
             //Revert piece moves back to the old set
             Moves = oldMoves;

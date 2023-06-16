@@ -14,42 +14,26 @@ namespace Managers
 
         public Turn BotMakeMove(List<ChessPiece> botPieces)
         {
-            var botPiecesThatCanMove = botPieces.Where(piece =>
-                    piece.GetAllPossibleMoves().Count != 0 || piece.Moves.SpecialMoves.Count != 0)
-                .ToList();
+            var botPiecesThatCanMove = 
+                botPieces
+                    .Where(piece => piece.Moves.Count != 0)
+                    .ToList();
             
             var pieceToMoveIndex = Random.Range(0, botPiecesThatCanMove.Count);
             var pieceToMove = botPiecesThatCanMove[pieceToMoveIndex];
 
-            var moveToMakeIndex = Random.Range(0,
-                pieceToMove.GetAllPossibleMoves().Count + pieceToMove.Moves.SpecialMoves.Count);
+            var moveToMakeIndex = Random.Range(0, pieceToMove.Moves.Count );
 
-            var moves = new List<Vector2Int>(pieceToMove.GetAllPossibleMoves());
-            moves.AddRange(pieceToMove.Moves.SpecialMoves.Select(sp => sp.Coords));
+            var moves = pieceToMove.Moves;
 
-            var moveToMakeCoords = moves[moveToMakeIndex];
-            var moveTile = TileManager.GetTile(moveToMakeCoords);
-            
-            if (pieceToMove.Moves.AvailableMoves.Contains(moveToMakeCoords))
-                moveTile.IsAvailableTile = true;
-            
-            if (pieceToMove.Moves.AttackMoves.Contains(moveToMakeCoords))
-                moveTile.IsAttackTile = true;
-            
-            if(pieceToMove.Moves.SpecialMoves.Select(sp => sp.Coords).ToList().Contains(moveToMakeCoords))
-            {
-                moveTile.IsSpecialTile = true;
-                switch (pieceToMove.Moves.FindSpecialMoveTypeFromCoords(moveToMakeCoords))
-                {
-                    case Shared.MoveType.EnPassant:
-                        moveTile.IsAttackTile = true;
-                        break;
-                    case Shared.MoveType.LongCastle:
-                    case Shared.MoveType.ShortCastle:
-                        moveTile.IsAvailableTile = true;
-                        break;
-                }
-            }
+            var moveToMake = moves[moveToMakeIndex];
+            var moveTile = TileManager.GetTile(moveToMake.Coords);
+
+            moveTile.IsAvailableTile = moveToMake.Type == Shared.MoveType.Normal;
+            moveTile.IsAttackTile = moveToMake.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant;
+            moveTile.IsSpecialTile =
+                moveToMake.Type is Shared.MoveType.EnPassant or Shared.MoveType.ShortCastle
+                    or Shared.MoveType.LongCastle;
 
             var botTurn = MovementManager.MakeMove(pieceToMove, moveTile, false);
 

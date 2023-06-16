@@ -9,7 +9,7 @@ namespace ChessPieces
         public bool isChecked = false;
         public override void CalculateAvailablePositions()
         {
-            Moves = new Moves();
+            Moves = new List<Move>();
             
             Vector2Int kingForwardMove = new(currentX, currentY + 1);
             Vector2Int kingBackwardMove = new(currentX, currentY - 1);
@@ -41,10 +41,10 @@ namespace ChessPieces
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
-                        Moves.AvailableMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Normal));
                         break;
                     case Shared.TileOccupiedBy.EnemyPiece:
-                        Moves.AttackMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Attack));
                         break;
                 }
             });
@@ -54,12 +54,12 @@ namespace ChessPieces
             Vector2Int castleShort = new(currentX, currentY - 2);
             var castleShortRook = MovementManager.ChessPieces[castleShort.x, castleShort.y - 1];
             if (castleShortRook != null && castleShortRook is Rook shortRook && !shortRook.IsMoved)
-                Moves.SpecialMoves.Add(new SpecialMove(castleShort, Shared.MoveType.ShortCastle));
+                Moves.Add(new Move(castleShort, Shared.MoveType.ShortCastle));
 
             Vector2Int castleLong = new(currentX, currentY + 2);
             var castleLongRook = MovementManager.ChessPieces[castleLong.x, castleLong.y + 2];
             if (castleLongRook != null && castleLongRook is Rook longRook && !longRook.IsMoved)
-                Moves.SpecialMoves.Add(new SpecialMove(castleLong, Shared.MoveType.LongCastle));
+                Moves.Add(new Move(castleLong, Shared.MoveType.LongCastle));
         }
     }
 }

@@ -24,26 +24,15 @@ namespace Managers
 
         public void UpdateTileMaterialAfterMove(ChessPiece chessPiece)
         {
-            foreach (var move in chessPiece.Moves.AvailableMoves)
-            {
-                UpdateTileMaterial(new Vector2Int(move.x, move.y), Shared.TileType.Default);
-                Tiles[move.x, move.y].GetComponent<Tile>().IsAvailableTile = false;
-            }
-
-            foreach (var move in chessPiece.Moves.AttackMoves)
-            {
-                UpdateTileMaterial(new Vector2Int(move.x, move.y), Shared.TileType.Default);
-                Tiles[move.x, move.y].GetComponent<Tile>().IsAttackTile = false;
-            }
-            
-            foreach (var move in chessPiece.Moves.SpecialMoves)
+            foreach (var move in chessPiece.Moves)
             {
                 UpdateTileMaterial(new Vector2Int(move.Coords.x, move.Coords.y), Shared.TileType.Default);
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsSpecialTile = false;                
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAttackTile = false;
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAvailableTile = false;
+                var tile = GetTile(move.Coords);
+                
+                tile.IsSpecialTile = false;                
+                tile.IsAttackTile = false;
+                tile.IsAvailableTile = false;
             }
-
         }
         
         public void UpdateTileMaterial(Vector2Int tileCoord, Shared.TileType materialType)

@@ -8,12 +8,12 @@ namespace ChessPieces
     {
         public override void CalculateAvailablePositions()
         {
-            Moves = new Moves();
+            Moves = new List<Move>();
             
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1);
-            Moves.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1);
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, 1));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, 1));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, 1, -1));
+            Moves.AddRange(Shared.GeneratePossibleMovesBasedOnXAndYStep(this, -1, -1));
         }
     }
 }

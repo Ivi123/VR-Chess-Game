@@ -8,7 +8,7 @@ namespace ChessPieces
     {
         public override void CalculateAvailablePositions()
         {
-            Moves = new Moves();
+            Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
             Vector2Int horseForwardMove1 = new(currentX + (direction * 2), currentY + 1);
@@ -42,10 +42,10 @@ namespace ChessPieces
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
-                        Moves.AvailableMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Normal));
                         break;
                     case Shared.TileOccupiedBy.EnemyPiece:
-                        Moves.AttackMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Attack));
                         break;
                 }
             });

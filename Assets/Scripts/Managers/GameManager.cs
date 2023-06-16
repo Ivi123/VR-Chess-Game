@@ -33,8 +33,8 @@ namespace Managers
         public List<GameObject> teamSelectors;
         
         // Refactor
-        public HumanPlayer HumanPlayer { get; set; }
-        public AIPlayer AIPlayer { get; set; }
+        public HumanPlayer HumanPlayer { get; private set; }
+        public AIPlayer AIPlayer { get; private set; }
         public Player CurrentPlayer { get; set; }
         
         //--------------------------------------- Methods ----------------------------------------------------------
@@ -65,6 +65,13 @@ namespace Managers
         {
             if(CurrentPlayer == null) return;
             
+            if (GameStatus is Shared.GameStatus.Victory or Shared.GameStatus.Defeat or Shared.GameStatus.Draw)
+            {
+                CurrentPlayer = null;
+                endGameHandler.DisplayEndGameCanvas(GameStatus);
+                return;
+            }
+            
             if (CurrentPlayer.HasMoved)
             {
                 CurrentPlayer.Update();
@@ -72,25 +79,17 @@ namespace Managers
                 CurrentPlayer.IsMyTurn = true;
                 if (CurrentPlayer == HumanPlayer) HumanPlayer.EnablePieces();
             }
-            
-            if (CurrentPlayer == AIPlayer)
-            {
-                MakeBotTurn();
-                CurrentPlayer.HasMoved = true;
-            }
-            
-            if (GameStatus is Shared.GameStatus.Continue or Shared.GameStatus.NotStarted) return;
-            
-            endGameHandler.DisplayEndGameCanvas(GameStatus);
+
+            if (CurrentPlayer != AIPlayer) return;
+            MakeBotTurn();
+            CurrentPlayer.HasMoved = true;
         }
 
         private void StartGame()
         {
             chessboard.StartGame();
             IsWhiteTurn = true;
-
-            movementManager.GenerateAllMoves();
-            movementManager.EliminateInvalidMoves(IsWhiteTurn);
+            
             GameStatus = Shared.GameStatus.Continue;
 
             if (HumanPlayer.Team == Shared.TeamType.White)
@@ -111,6 +110,9 @@ namespace Managers
                 CurrentPlayer = AIPlayer;
                 HumanPlayer.DisablePieces();
             }
+            
+            movementManager.GenerateAllMoves();
+            movementManager.EliminateInvalidMoves(IsWhiteTurn);
             
             AIPlayer.DisablePieces();
             CurrentPlayer.IsMyTurn = true;
