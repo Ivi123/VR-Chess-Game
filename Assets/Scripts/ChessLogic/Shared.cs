@@ -51,7 +51,8 @@ namespace ChessLogic
             ShortCastle,
             LongCastle,
             Promotion,
-            Normal
+            Normal,
+            Attack
         }
 
         public enum AttackedBy
@@ -64,6 +65,7 @@ namespace ChessLogic
 
         public enum GameStatus
         {
+            NotStarted,
             Draw,
             Victory,
             Defeat,

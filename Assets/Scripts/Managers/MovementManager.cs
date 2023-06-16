@@ -17,10 +17,10 @@ namespace Managers
         //Movement and piece tracking properties
         public ChessPiece[,] ChessPieces { get; set; }
         public List<GameObject> WhitePieces { get; set; }
-        public ChessPiece WhiteKing { get; set; }
+        public ChessPiece WhiteKing { get; private set; }
         public List<GameObject> BlackPieces { get; set; }
-        public ChessPiece BlackKing{ get; set; }
-        public bool TeamHasMoves { get; set; }
+        public ChessPiece BlackKing{ get; private set; }
+        public bool TeamHasPossibleMoves { get; private set; }
         
         // Elimination Related Properties
         public LinkedList<Vector3> FreeWhiteEliminationPosition { get; set; }
@@ -28,6 +28,9 @@ namespace Managers
         public LinkedList<Vector3> FreeBlackEliminationPosition { get; set; }
         public LinkedList<Vector3> UsedBlackEliminationPosition { get; set; }
 
+        //Refactor
+        public bool TeamHasMoved { get; set; }
+        
         //----------------------------------------------- Methods ------------------------------------------------------
 
         public void SetKing(ChessPiece king)
@@ -100,7 +103,7 @@ namespace Managers
             var chessPiece = ChessPieces[currentX, currentY];
 
             // Re-enable XRGrabInteractable on the current team's pieces
-            EnablePickUpOnPieces(chessPiece.team);
+            chessPiece.MyPlayer.DisablePieces();
 
             // Update the currently picked chess piece's tile material from Selected to Default
             TileManager.UpdateTileMaterial(new Vector2Int(currentX, currentY), Shared.TileType.Default);
@@ -108,9 +111,14 @@ namespace Managers
             // Update the ChessPieces matrix with the new format after a chess piece was moved. The method returns
             // the turn that was just made with all the moved pieces and the changes in positions
             var turn = MakeMove(chessPiece, newTile, false);
-            if (turn == null) TileManager.UpdateTileMaterialAfterMove(chessPiece);
-
-            if(turn != null) GameManager.AdvanceTurn(turn);
+            if (turn == null)
+            {
+                TileManager.UpdateTileMaterialAfterMove(chessPiece);
+                return;
+            }
+            
+            chessPiece.MyPlayer.HasMoved = true;
+            GameManager.AdvanceTurn(turn);
         }
 
         public Turn MakeMove(ChessPiece chessPiece, Tile newTile, bool isSimulation)
@@ -368,24 +376,6 @@ namespace Managers
             }
             
         }
-
-        public void DisableOrEnablePickUpOnPieces(List<GameObject> pieces)
-        {
-            foreach (var piece in pieces)
-            {
-                piece.GetComponent<XRGrabInteractable>().enabled 
-                    = !piece.GetComponent<XRGrabInteractable>().enabled;
-            }
-        }
-    
-        private void EnablePickUpOnPieces(Shared.TeamType team)
-        {
-            var teamToBeEnabled = Shared.TeamType.White.Equals(team) ? WhitePieces : BlackPieces;
-            foreach (var piece in teamToBeEnabled)
-            { 
-                piece.GetComponent<XRGrabInteractable>().enabled = true;
-            }
-        }
         
         public Shared.TileOccupiedBy CalculateSpaceOccupation(Vector2Int position, Shared.TeamType selectedPieceTeam)
         {
@@ -413,15 +403,15 @@ namespace Managers
             TileManager.ResetTileAttackedStatus();
 
             // Calculate all the move positions for the White Pieces and populate the Attacking Pieces/Status of the Tiles
-            foreach (var chessPiece in WhitePieces.Select(pieceGameObject => pieceGameObject.GetComponent<ChessPiece>()))
+            foreach (var chessPiece in GameManager.AIPlayer.Pieces)
             {
                 chessPiece.CalculateAvailablePositions();
             }
 
             // Calculate all the move positions for the Black Pieces and populate the Attacking Pieces/Status of the Tiles
-            foreach (var chessPiece in BlackPieces.Select(pieceGameObject => pieceGameObject.GetComponent<ChessPiece>()))
+            foreach (var chessPiece in GameManager.HumanPlayer.Pieces)
             {
-                chessPiece.GetComponent<ChessPiece>().CalculateAvailablePositions();
+                chessPiece.CalculateAvailablePositions();
             }
             
             TileManager.DetermineAttackStatus();
@@ -429,7 +419,7 @@ namespace Managers
 
         public void EliminateInvalidMoves(bool isCurrentTeamWhite)
         {
-            TeamHasMoves = false;
+            TeamHasPossibleMoves = false;
             var friendlyPieces =
                 isCurrentTeamWhite
                     ? WhitePieces.Select(go => go.GetComponent<ChessPiece>())
@@ -446,14 +436,14 @@ namespace Managers
                 {
                     if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
                         fPiece.Moves.SpecialMoves.Count != 0)
-                        TeamHasMoves = true;
+                        TeamHasPossibleMoves = true;
                     continue;
                 }
                 if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing && !isKingChecked)
                 {
                     if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
                         fPiece.Moves.SpecialMoves.Count != 0)
-                        TeamHasMoves = true;
+                        TeamHasPossibleMoves = true;
                     continue;
                 }
                 
@@ -584,7 +574,7 @@ namespace Managers
 
                 if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
                     fPiece.Moves.SpecialMoves.Count != 0)
-                    TeamHasMoves = true;
+                    TeamHasPossibleMoves = true;
             }
         }
 

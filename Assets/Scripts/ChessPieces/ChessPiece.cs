@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ChessLogic;
 using Managers;
+using Players;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 namespace ChessPieces
 {
@@ -17,6 +19,18 @@ namespace ChessPieces
         King = 6
     }
 
+    public struct Move
+    {
+        public Vector2Int Coords { get; set; }
+        public Shared.MoveType Type { get; set; }
+        
+        public Move(Vector2Int moveCoords, Shared.MoveType moveType)
+        {
+            Coords = moveCoords;
+            Type = moveType;
+        }
+    }
+    
     public abstract class ChessPiece : MonoBehaviour
     {
         public Shared.TeamType team;
@@ -38,6 +52,8 @@ namespace ChessPieces
         public Tile HoveringTile { get; set; }
         public MovementManager MovementManager { get; set; }
 
+        public Player MyPlayer { get; set; }
+        
         //---------------------------------------------------- Methods ------------------------------------------------------
 
         public void Start()
@@ -61,11 +77,18 @@ namespace ChessPieces
             transform.SetPositionAndRotation(position, DesiredRotation);
             transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             HoveringTile = null;
-
-            if (!MovementManager.GameManager.IsPlayerTurn && MovementManager.GameManager.GameStatus == Shared.GameStatus.Continue)
-                MovementManager.GameManager.MakeBotTurn();
         }
 
+        public void EnablePickUpOnPiece()
+        {
+            gameObject.GetComponent<XRGrabInteractable>().enabled = true;
+        }
+
+        public void DisablePickUpOnPiece()
+        {
+            gameObject.GetComponent<XRGrabInteractable>().enabled = false;
+        }
+        
         public void SavePosition()
         {
             var transformPosition = transform.position;
