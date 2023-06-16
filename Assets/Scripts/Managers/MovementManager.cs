@@ -17,10 +17,10 @@ namespace Managers
         //Movement and piece tracking properties
         public ChessPiece[,] ChessPieces { get; set; }
         public List<GameObject> WhitePieces { get; set; }
-        private ChessPiece whiteKing;
+        public ChessPiece WhiteKing { get; set; }
         public List<GameObject> BlackPieces { get; set; }
-        private ChessPiece blackKing;
-        public bool currentTeamHasMoves;
+        public ChessPiece BlackKing{ get; set; }
+        public bool TeamHasMoves { get; set; }
         
         // Elimination Related Properties
         public LinkedList<Vector3> FreeWhiteEliminationPosition { get; set; }
@@ -34,11 +34,11 @@ namespace Managers
         {
             if (king.team == Shared.TeamType.White)
             {
-                whiteKing = king;
+                WhiteKing = king;
             }
             else
             {
-                blackKing = king;
+                BlackKing = king;
             }
         }
         
@@ -429,20 +429,33 @@ namespace Managers
 
         public void EliminateInvalidMoves(bool isCurrentTeamWhite)
         {
+            TeamHasMoves = false;
             var friendlyPieces =
                 isCurrentTeamWhite
                     ? WhitePieces.Select(go => go.GetComponent<ChessPiece>())
                     : BlackPieces.Select(go => go.GetComponent<ChessPiece>());
 
-            var protectedKing = isCurrentTeamWhite ? whiteKing : blackKing;
+            var protectedKing = isCurrentTeamWhite ? WhiteKing : BlackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
             var isKingChecked = ((King)protectedKing).isChecked;
 
             foreach (var fPiece in friendlyPieces.ToList())
             {
                 var currentPieceTile = TileManager.GetTile(fPiece.currentX, fPiece.currentY);
-                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing && !isKingChecked) continue;
-                if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing && !isKingChecked) continue;
+                if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing && !isKingChecked)
+                {
+                    if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
+                        fPiece.Moves.SpecialMoves.Count != 0)
+                        TeamHasMoves = true;
+                    continue;
+                }
+                if (currentPieceTile.AttackedBy == ignoredAttacks && fPiece != protectedKing && !isKingChecked)
+                {
+                    if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
+                        fPiece.Moves.SpecialMoves.Count != 0)
+                        TeamHasMoves = true;
+                    continue;
+                }
                 
                 var piecesAttackingTheTile = isCurrentTeamWhite
                     ? currentPieceTile.BlackAttackingPieces
@@ -568,6 +581,10 @@ namespace Managers
 
                 foreach (var removedMove in specialMovesToBeRemoved)
                     fPiece.Moves.SpecialMoves.Remove(removedMove);
+
+                if (fPiece.Moves.AttackMoves.Count != 0 || fPiece.Moves.AvailableMoves.Count != 0 ||
+                    fPiece.Moves.SpecialMoves.Count != 0)
+                    TeamHasMoves = true;
             }
         }
 
@@ -631,7 +648,7 @@ namespace Managers
 
         public void EvaluateKingStatus()
         {
-            var king = GameManager.IsWhiteTurn ? whiteKing : blackKing;
+            var king = GameManager.IsWhiteTurn ? WhiteKing : BlackKing;
             var ignoredAttacks = GameManager.IsWhiteTurn ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
             var kingCoords = new Vector2Int(king.currentX, king.currentY);
             var kingTile = TileManager.GetTile(kingCoords);

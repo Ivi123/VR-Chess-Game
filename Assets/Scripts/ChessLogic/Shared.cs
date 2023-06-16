@@ -61,7 +61,15 @@ namespace ChessLogic
             Black,
             Both
         }
-    
+
+        public enum GameStatus
+        {
+            Draw,
+            Victory,
+            Defeat,
+            Continue
+        }
+        
         public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)
         {
             List<Vector2Int> possibleMoves = new();

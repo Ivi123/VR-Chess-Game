@@ -20,6 +20,7 @@ namespace Managers
         public TileManager tileManager;
         public GameObject xrOrigin;
         public BotPlayer botPlayer;
+        public EndGameHandler endGameHandler;
         public bool IsWhiteTurn { get; private set; }
         public bool IsPlayerTurn { get; set; }
 
@@ -27,6 +28,7 @@ namespace Managers
         public List<Turn> History { get; set; }
         public Turn LastTurn { get; set; }
 
+        public Shared.GameStatus GameStatus { get; set; }
 
         // Player Info and team selection
         private Shared.TeamType playersTeam;
@@ -101,6 +103,40 @@ namespace Managers
             movementManager.GenerateAllMoves();
             movementManager.EvaluateKingStatus();
             movementManager.EliminateInvalidMoves(IsWhiteTurn);
+
+            GameStatus = EvaluateGameStatus();
+            if(GameStatus == Shared.GameStatus.Continue) return;
+
+            // Handle End Of Game
+            endGameHandler.DisplayEndGameCanvas(GameStatus);
+        }
+
+        private Shared.GameStatus EvaluateGameStatus()
+        {
+            var currentKing = (King)(IsWhiteTurn ? movementManager.WhiteKing : movementManager.BlackKing);
+            var currentTeam = IsWhiteTurn ? Shared.TeamType.White : Shared.TeamType.Black;
+
+            switch (currentKing.isChecked)
+            {
+                case true when !movementManager.TeamHasMoves:
+                    return currentTeam == playersTeam ? Shared.GameStatus.Defeat : Shared.GameStatus.Victory;
+                case false when !movementManager.TeamHasMoves:
+                    return Shared.GameStatus.Draw;
+            }
+
+            var drawConfigurations = new List<List<ChessPiece>>();
+            drawConfigurations.Add(new List<ChessPiece> {new King()});
+            drawConfigurations.Add(new List<ChessPiece> {new King(), new Bishop()});
+            drawConfigurations.Add(new List<ChessPiece> {new King(), new Knight()});
+
+            if (drawConfigurations.Contains(movementManager.BlackPieces
+                    .Select(piece => piece.GetComponent<ChessPiece>()).ToList())
+                &&
+                drawConfigurations.Contains(movementManager.WhitePieces
+                    .Select(piece => piece.GetComponent<ChessPiece>()).ToList()))
+                return Shared.GameStatus.Draw;
+
+            return Shared.GameStatus.Continue;
         }
 
         public void MakeBotTurn()

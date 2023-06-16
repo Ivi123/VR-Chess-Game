@@ -62,7 +62,7 @@ namespace ChessPieces
             transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             HoveringTile = null;
 
-            if (!MovementManager.GameManager.IsPlayerTurn)
+            if (!MovementManager.GameManager.IsPlayerTurn && MovementManager.GameManager.GameStatus == Shared.GameStatus.Continue)
                 MovementManager.GameManager.MakeBotTurn();
         }
 
