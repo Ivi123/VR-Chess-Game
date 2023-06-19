@@ -51,6 +51,7 @@ namespace ChessLogic
             ShortCastle,
             LongCastle,
             Promotion,
+            AttackPromotion,
             Normal,
             Attack
         }

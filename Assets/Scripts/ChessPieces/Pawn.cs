@@ -12,17 +12,20 @@ namespace ChessPieces
         {
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
+            var isPromotion = !isMoved && (currentX is 1 or 6);
 
             Vector2Int possibleMoveOneTileAhead = new(currentX + (direction * 1), currentY);
             if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveOneTileAhead, team))
             {
-                Moves.Add(new Move(possibleMoveOneTileAhead, Shared.MoveType.Normal));
+                Moves.Add(new Move(possibleMoveOneTileAhead,
+                    isPromotion ? Shared.MoveType.Promotion : Shared.MoveType.Normal));
                 if (!isMoved)
                 {
                     Vector2Int possibleMoveTwoTilesAhead = new(currentX + (direction * 2), currentY);
                     if (Shared.TileOccupiedBy.None ==
                         MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team))
-                        Moves.Add(new Move(possibleMoveTwoTilesAhead, Shared.MoveType.Normal));
+                        Moves.Add(new Move(possibleMoveTwoTilesAhead,
+                            isPromotion ? Shared.MoveType.Promotion : Shared.MoveType.Normal));
                 }
             }
 
@@ -32,7 +35,8 @@ namespace ChessPieces
             {
                 AddToTileAttackingPieces(attackMoveLeft);
                 if (leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece)
-                    Moves.Add(new Move(attackMoveLeft, Shared.MoveType.Attack));
+                    Moves.Add(new Move(attackMoveLeft,
+                        isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
             }
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
@@ -41,7 +45,8 @@ namespace ChessPieces
             {
                 AddToTileAttackingPieces(attackMoveRight);
                 if (rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece)
-                    Moves.Add(new Move(attackMoveRight, Shared.MoveType.Attack));
+                    Moves.Add(new Move(attackMoveRight,
+                        isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
             }
 
             Moves.AddRange(CalculateSpecialMoves());

@@ -119,8 +119,10 @@ namespace Managers
             
             HumanPlayer.InitPieces();
             AIPlayer.InitPieces();
-            
-            if (AIPlayer.IsMyTurn) MakeBotTurn();
+
+            if (!AIPlayer.IsMyTurn) return;
+            MakeBotTurn();
+            CurrentPlayer.HasMoved = true;
         }
 
         public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition)

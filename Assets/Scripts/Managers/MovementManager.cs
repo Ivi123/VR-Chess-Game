@@ -27,9 +27,6 @@ namespace Managers
         public LinkedList<Vector3> UsedWhiteEliminationPosition { get; set; }
         public LinkedList<Vector3> FreeBlackEliminationPosition { get; set; }
         public LinkedList<Vector3> UsedBlackEliminationPosition { get; set; }
-
-        //Refactor
-        public bool TeamHasMoved { get; set; }
         
         //----------------------------------------------- Methods ------------------------------------------------------
 
@@ -572,10 +569,10 @@ namespace Managers
             }
             
             ((King)king).isChecked = true;
-            TileManager.UpdateTileMaterial(kingCoords,
+            /*TileManager.UpdateTileMaterial(kingCoords,
                 TileManager.GetTile(kingCoords).IsWhiteTile
                     ? Shared.TileType.AttackTileWhite
-                    : Shared.TileType.AttackTileBlack);
+                    : Shared.TileType.AttackTileBlack);*/
         }
     }
 }
