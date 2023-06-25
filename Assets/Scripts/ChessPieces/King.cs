@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ChessLogic;
 using UnityEngine;
@@ -6,6 +7,16 @@ namespace ChessPieces
 {
     public class King : ChessPiece
     {
+        public void Awake()
+        {
+            pieceScore = 999;
+        }
+
+        public void Update()
+        {
+            if (isChecked) ;
+        }
+
         public bool isChecked = false;
         public override void CalculateAvailablePositions()
         {

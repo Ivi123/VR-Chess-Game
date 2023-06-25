@@ -19,7 +19,7 @@
                 {
                     "name": "",
                     "id": "2e369056-0b42-4678-b3ed-9ee39ab29c41",
-                    "path": "<OculusTouchController>/menu",
+                    "path": "<OculusTouchController>{LeftHand}/menu",
                     "interactions": "",
                     "processors": "",
                     "groups": "",

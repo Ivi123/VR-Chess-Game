@@ -65,19 +65,24 @@ namespace Managers
         {
             if(CurrentPlayer == null) return;
             
-            if (GameStatus is Shared.GameStatus.Victory or Shared.GameStatus.Defeat or Shared.GameStatus.Draw)
-            {
-                CurrentPlayer = null;
-                endGameHandler.DisplayEndGameCanvas(GameStatus);
-                return;
-            }
-            
             if (CurrentPlayer.HasMoved)
             {
                 CurrentPlayer.Update();
                 CurrentPlayer = CurrentPlayer == AIPlayer ? HumanPlayer : AIPlayer;
                 CurrentPlayer.IsMyTurn = true;
                 if (CurrentPlayer == HumanPlayer) HumanPlayer.EnablePieces();
+                
+                movementManager.GenerateAllMoves();
+                movementManager.EvaluateKingStatus();
+                movementManager.EliminateInvalidMoves(IsWhiteTurn);
+                GameStatus = EvaluateGameStatus();
+            }
+            
+            if (GameStatus is Shared.GameStatus.Victory or Shared.GameStatus.Defeat or Shared.GameStatus.Draw)
+            {
+                CurrentPlayer = null;
+                endGameHandler.DisplayEndGameCanvas(GameStatus);
+                return;
             }
 
             if (CurrentPlayer != AIPlayer) return;
@@ -147,12 +152,6 @@ namespace Managers
             SwitchTurn();
             
             tileManager.UpdateTileMaterialAfterMove(LastTurn.PiecesMovedInThisTurn.Pieces[^1]);
-
-            movementManager.GenerateAllMoves();
-            movementManager.EvaluateKingStatus();
-            movementManager.EliminateInvalidMoves(IsWhiteTurn);
-
-            GameStatus = EvaluateGameStatus();
         }
 
         private Shared.GameStatus EvaluateGameStatus()
@@ -180,7 +179,7 @@ namespace Managers
             return Shared.GameStatus.Continue;
         }
 
-        public void MakeBotTurn()
+        private void MakeBotTurn()
         {
             var botTurn =
                 botPlayer.BotMakeMove(AIPlayer.Pieces);

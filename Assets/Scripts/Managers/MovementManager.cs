@@ -16,11 +16,12 @@ namespace Managers
         
         //Movement and piece tracking properties
         public ChessPiece[,] ChessPieces { get; set; }
-        public List<GameObject> WhitePieces { get; set; }
+        public List<GameObject> WhitePieces { get; set; } 
         public ChessPiece WhiteKing { get; private set; }
         public List<GameObject> BlackPieces { get; set; }
         public ChessPiece BlackKing{ get; private set; }
         public bool TeamHasPossibleMoves { get; private set; }
+        public PromotionHandler promotionHandler;
         
         // Elimination Related Properties
         public LinkedList<Vector3> FreeWhiteEliminationPosition { get; set; }
@@ -57,7 +58,10 @@ namespace Managers
             {
                 var isTileWhite = TileManager.IsTileWhite(move.Coords);
                 var tileType = 
-                    move.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant 
+                    move.Type 
+                        is Shared.MoveType.Attack 
+                        or Shared.MoveType.EnPassant 
+                        or Shared.MoveType.AttackPromotion 
                         ? isTileWhite 
                             ? Shared.TileType.AttackTileWhite : Shared.TileType.AttackTileBlack 
                         : isTileWhite 
@@ -68,9 +72,10 @@ namespace Managers
                 var tile = TileManager.GetTile(move.Coords);
                 tile.IsAvailableTile = move.Type is Shared.MoveType.Normal
                     or Shared.MoveType.Promotion or Shared.MoveType.LongCastle or Shared.MoveType.ShortCastle;
-                tile.IsAttackTile = move.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant;
+                tile.IsAttackTile = move.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant
+                    or Shared.MoveType.AttackPromotion;
                 tile.IsSpecialTile = move.Type is Shared.MoveType.EnPassant or Shared.MoveType.Promotion
-                    or Shared.MoveType.LongCastle or Shared.MoveType.ShortCastle;
+                    or Shared.MoveType.AttackPromotion or Shared.MoveType.LongCastle or Shared.MoveType.ShortCastle;
             }
 
             var pickedPiece = ChessPieces[x, y];
@@ -96,7 +101,6 @@ namespace Managers
                 return;
             }
             
-            chessPiece.MyPlayer.HasMoved = true;
             GameManager.AdvanceTurn(turn);
         }
 
@@ -121,6 +125,7 @@ namespace Managers
                 EliminatePiece(enemyPiece, isSimulation);
             }
 
+            if(!isSimulation) chessPiece.MyPlayer.HasMoved = true;
             if (newTile.IsSpecialTile)
             {
                 var specialMoveType = chessPiece.Moves.First(move => move.Coords == newTile.Position).Type;
@@ -169,9 +174,23 @@ namespace Managers
                                 TileManager.GetTileCenter(lRookToBeCastled.currentX, lRookToBeCastled.currentY);
                         lRookToBeCastled.SavePosition();
                         break;
-                    //case Shared.MoveType.Promotion:
-                    //    throw new NotImplementedException();
-                    //    break;
+                    case Shared.MoveType.AttackPromotion:
+                        var promotionEnemyPiece = ChessPieces[newPosition.x, newPosition.y];
+                        movedPieces.AddNewPieceAndPosition(promotionEnemyPiece, MovedPieces.EliminationPosition);
+                        EliminatePiece(promotionEnemyPiece, isSimulation);
+                        turn.MoveType = Shared.MoveType.AttackPromotion;
+                        
+                        chessPiece.MyPlayer.HasMoved = false;
+                        chessPiece.MyPlayer.DisablePieces();
+                        promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        break;
+                    case Shared.MoveType.Promotion:
+                        chessPiece.MyPlayer.HasMoved = false;
+                        
+                        turn.MoveType = Shared.MoveType.Promotion;
+                        chessPiece.MyPlayer.DisablePieces();
+                        promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        break;
                 }
             }
 
@@ -228,7 +247,6 @@ namespace Managers
 
         public void UndoLastMove()
         {
-            
             var turnToUndo = GameManager.LastTurn;
             if(turnToUndo == null) return;
             
@@ -402,15 +420,16 @@ namespace Managers
             TeamHasPossibleMoves = false;
             var friendlyPieces =
                 isCurrentTeamWhite
-                    ? WhitePieces.Select(go => go.GetComponent<ChessPiece>())
-                    : BlackPieces.Select(go => go.GetComponent<ChessPiece>());
-
+                    ? WhitePieces.Select(go => go.GetComponent<ChessPiece>()).ToList()
+                    : BlackPieces.Select(go => go.GetComponent<ChessPiece>()).ToList();
+            
+            var teamPlayer = friendlyPieces.First().MyPlayer;
             var protectedKing = isCurrentTeamWhite ? WhiteKing : BlackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
             var isKingChecked = ((King)protectedKing).isChecked;
             var kingTile = TileManager.GetTile(protectedKing.currentX, protectedKing.currentY);
 
-            foreach (var fPiece in friendlyPieces.ToList())
+            foreach (var fPiece in friendlyPieces)
             {
                 var currentPieceTile = TileManager.GetTile(fPiece.currentX, fPiece.currentY);
                 if (currentPieceTile.AttackedBy == Shared.AttackedBy.None && fPiece != protectedKing && !isKingChecked)
@@ -507,7 +526,8 @@ namespace Managers
                         tile.IsAvailableTile =
                             move.Type is Shared.MoveType.Normal or Shared.MoveType.ShortCastle
                                 or Shared.MoveType.LongCastle;
-                        tile.IsAttackTile = move.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant;
+                        tile.IsAttackTile = move.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant
+                            or Shared.MoveType.AttackPromotion;
                         tile.IsSpecialTile = move.Type is Shared.MoveType.EnPassant or Shared.MoveType.ShortCastle
                             or Shared.MoveType.LongCastle;
                         
@@ -524,11 +544,11 @@ namespace Managers
                                 : moveToTile.WhiteAttackingPieces);
                     
                         var markMoveForExclusion = false;
-                        foreach (var attackingPiece in piecesAttackingTheTile.ToList())
+                        foreach (var attackingPiece in piecesAttackingTheTile.ToHashSet())
                         {
                             var moves = attackingPiece.CalculateAvailablePositionsWithoutUpdating();
                             var attackMoves = moves
-                                .FindAll(aMove => aMove.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant)
+                                .FindAll(aMove => aMove.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant or Shared.MoveType.AttackPromotion)
                                 .Select(aMove => aMove.Coords).ToList();
 
                             if (!attackMoves.Contains(new Vector2Int(protectedKing.currentX, protectedKing.currentY)))
@@ -552,6 +572,8 @@ namespace Managers
 
                 if (fPiece.Moves.Count != 0)
                     TeamHasPossibleMoves = true;
+
+                teamPlayer.AllMoves.AddRange(fPiece.Moves);
             }
         }
         

@@ -167,7 +167,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
     
-        private ChessPiece SpawnSinglePiece(ChessPieceType type, Shared.TeamType team)
+        public ChessPiece SpawnSinglePiece(ChessPieceType type, Shared.TeamType team)
         {
             var cpGameObject = Instantiate(prefabs[(int)type - 1], transform);
             AddTileDetector(cpGameObject);
@@ -223,7 +223,7 @@ namespace Managers
                     PositionSinglePiece(x, y);
         }
     
-        private void PositionSinglePiece(int x, int y)
+        public void PositionSinglePiece(int x, int y)
         {
             MovementManager.ChessPieces[x, y].currentX = x;
             MovementManager.ChessPieces[x, y].currentY = y;

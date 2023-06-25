@@ -6,13 +6,18 @@ namespace ChessPieces
 {
     public class Pawn : ChessPiece
     {
+        public void Awake()
+        {
+            pieceScore = 1;
+        }
+        
         public bool IsEnPassantTarget { get; set; }
         
         public override void CalculateAvailablePositions()
         {
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
-            var isPromotion = !isMoved && (currentX is 1 or 6);
+            var isPromotion = isMoved && (currentX is 1 or 6);
 
             Vector2Int possibleMoveOneTileAhead = new(currentX + (direction * 1), currentY);
             if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveOneTileAhead, team))

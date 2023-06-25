@@ -30,13 +30,17 @@ namespace Managers
             var moveTile = TileManager.GetTile(moveToMake.Coords);
 
             moveTile.IsAvailableTile = moveToMake.Type == Shared.MoveType.Normal;
-            moveTile.IsAttackTile = moveToMake.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant;
+            moveTile.IsAttackTile = moveToMake.Type is Shared.MoveType.Attack or Shared.MoveType.EnPassant
+                or Shared.MoveType.AttackPromotion;
             moveTile.IsSpecialTile =
                 moveToMake.Type is Shared.MoveType.EnPassant or Shared.MoveType.ShortCastle
-                    or Shared.MoveType.LongCastle;
+                    or Shared.MoveType.LongCastle or Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion;
 
             var botTurn = MovementManager.MakeMove(pieceToMove, moveTile, false);
 
+            if(moveToMake.Type is Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion)
+                MovementManager.promotionHandler.ChangeInQueen();
+            
             moveTile.IsAvailableTile = false;
             moveTile.IsAttackTile = false;
             moveTile.IsSpecialTile = false;

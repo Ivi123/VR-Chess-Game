@@ -5,6 +5,11 @@ namespace ChessPieces
 {
     public class Queen : ChessPiece
     {
+        public void Awake()
+        {
+            pieceScore = 9;
+        }
+
         public override void CalculateAvailablePositions()
         {
             Moves = new List<Move>();

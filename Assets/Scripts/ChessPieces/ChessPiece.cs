@@ -46,6 +46,7 @@ namespace ChessPieces
         public Quaternion DesiredRotation { get; set; }
         private Vector3 position;
         protected bool isMoved = false;
+        public int pieceScore;
         public List<Move> Moves { get; set; }
 
         public bool IsMoved { get => isMoved; set => isMoved = value; }

@@ -6,6 +6,10 @@ namespace ChessPieces
 {
     public class Bishop : ChessPiece
     {
+        public void Awake()
+        {
+            pieceScore = 3;
+        }
         public override void CalculateAvailablePositions()
         {
             Moves = new List<Move>();
