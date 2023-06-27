@@ -12,15 +12,15 @@ namespace ChessPieces
         }
         
         public bool IsEnPassantTarget { get; set; }
-        
-        public override void CalculateAvailablePositions()
+
+        public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
         {
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
             var isPromotion = isMoved && (currentX is 1 or 6);
 
             Vector2Int possibleMoveOneTileAhead = new(currentX + (direction * 1), currentY);
-            if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(possibleMoveOneTileAhead, team))
+            if (Shared.TileOccupiedBy.None == MovementManager.CalculateSpaceOccupation(board, possibleMoveOneTileAhead, team))
             {
                 Moves.Add(new Move(possibleMoveOneTileAhead,
                     isPromotion ? Shared.MoveType.Promotion : Shared.MoveType.Normal));
@@ -28,14 +28,14 @@ namespace ChessPieces
                 {
                     Vector2Int possibleMoveTwoTilesAhead = new(currentX + (direction * 2), currentY);
                     if (Shared.TileOccupiedBy.None ==
-                        MovementManager.CalculateSpaceOccupation(possibleMoveTwoTilesAhead, team))
+                        MovementManager.CalculateSpaceOccupation(board, possibleMoveTwoTilesAhead, team))
                         Moves.Add(new Move(possibleMoveTwoTilesAhead,
                             isPromotion ? Shared.MoveType.Promotion : Shared.MoveType.Normal));
                 }
             }
 
             Vector2Int attackMoveLeft = new(currentX + (direction * 1), currentY + 1);
-            var leftOccupationStatus = MovementManager.CalculateSpaceOccupation(attackMoveLeft, team);
+            var leftOccupationStatus = MovementManager.CalculateSpaceOccupation(board, attackMoveLeft, team);
             if (leftOccupationStatus != Shared.TileOccupiedBy.EndOfTable)
             {
                 AddToTileAttackingPieces(attackMoveLeft);
@@ -45,7 +45,7 @@ namespace ChessPieces
             }
 
             Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
-            var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(attackMoveRight, team);
+            var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(board, attackMoveRight, team);
             if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
             {
                 AddToTileAttackingPieces(attackMoveRight);
@@ -55,6 +55,18 @@ namespace ChessPieces
             }
 
             Moves.AddRange(CalculateSpecialMoves());
+        }
+
+        public override void CalculateAvailablePositions()
+        {
+            var tiles = new Tile[8,8];
+            foreach (var tileManagerTile in MovementManager.TileManager.Tiles)
+            {
+                var oldTile = tileManagerTile.GetComponent<Tile>();
+                tiles[oldTile.Position.x, oldTile.Position.y] = oldTile;
+            }
+
+            CalculateAvailablePositions(MovementManager.ChessPieces, tiles);
         }
 
         private List<Move> CalculateSpecialMoves()

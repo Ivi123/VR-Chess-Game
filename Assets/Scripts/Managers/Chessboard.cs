@@ -233,5 +233,54 @@ namespace Managers
             MovementManager.ChessPieces[x, y].SavePosition();
             MovementManager.ChessPieces[x, y].SaveOrientation();
         }
+
+        public ChessPiece[,] DeepCopyBoard(ChessPiece[,] boardToCopy)
+        {
+            var copyBoard = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
+            var currentBoard = boardToCopy;
+
+            for (var x = 0; x < TileManager.TileCountX; x++)
+            {
+                for (var y = 0; y < TileManager.TileCountY; y++)
+                {
+                    if(currentBoard[x, y] == null) continue;
+
+                    var currentPieceToCopy = currentBoard[x, y];
+                    
+                    var copyGo = Instantiate(prefabs[(int)currentPieceToCopy.type - 1], transform);
+                    copyGo.SetActive(false);
+                    
+                    var copyCp = copyGo.AddComponent<ChessPiece>();
+                    copyCp.team = currentPieceToCopy.team;
+                    copyCp.type = currentPieceToCopy.type;
+                    copyCp.startingPosition = currentPieceToCopy.startingPosition;
+                    copyCp.currentX = currentPieceToCopy.currentX;
+                    copyCp.currentY = currentPieceToCopy.currentY;
+
+                    copyBoard[x, y] = copyCp;
+                }
+            }
+
+            return copyBoard;
+        }
+
+        public Tile[,] DeepCopyTiles()
+        {
+            var tiles = new Tile[TileManager.TileCountX, TileManager.TileCountY];
+            for (var x = 0; x < TileManager.TileCountX; x++)
+            {
+                for (var y = 0; y < TileManager.TileCountY; y++)
+                {
+                    var tileGo = new GameObject();
+                    var tile = tileGo.AddComponent<Tile>();
+                    tileGo.SetActive(false);
+                    
+                    tile.Position = new Vector2Int(x, y);
+                    tiles[x, y] = tile;
+                }
+            }
+
+            return tiles;
+        }
     }
 }

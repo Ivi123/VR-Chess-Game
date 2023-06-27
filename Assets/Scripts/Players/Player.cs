@@ -11,7 +11,6 @@ namespace Players
         public List<ChessPiece> Pieces { get; set; }
         public bool IsMyTurn { get; set; }
         public bool HasMoved { get; set; }
-        public List<Move> AllMoves { get; set; }
         
         protected Player()
         {

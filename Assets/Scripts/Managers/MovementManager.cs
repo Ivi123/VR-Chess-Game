@@ -230,7 +230,6 @@ namespace Managers
                 UsedBlackEliminationPosition.AddFirst(eliminationPosition);
                 FreeBlackEliminationPosition.RemoveFirst();
             }
-
             if(!isSimulation) enemyPiece.MyPlayer.Pieces.Remove(enemyPiece);
          
             ChessPieces[enemyPiece.currentX, enemyPiece.currentY] = null;
@@ -260,11 +259,11 @@ namespace Managers
             GameManager.SwitchTurn();
             
             GenerateAllMoves();
-            EvaluateKingStatus();
+            EvaluateKingStatus(GameManager.CurrentPlayer.Team);
             EliminateInvalidMoves(GameManager.IsWhiteTurn);
         }
 
-        private void UndoMove(MovedPieces movesToUndo, bool isSimulation)
+        public void UndoMove(MovedPieces movesToUndo, bool isSimulation)
         {
             for (var i = movesToUndo.PositionChanges.Count - 1; i >= 0; i--)
             {
@@ -273,6 +272,7 @@ namespace Managers
 
                 if (currentPosition == MovedPieces.EliminationPosition)
                 {
+                    if(!isSimulation) chessPieceToUndo.MyPlayer.Pieces.Add(chessPieceToUndo);
                     switch (chessPieceToUndo.team)
                     {
                         case Shared.TeamType.White:
@@ -374,13 +374,14 @@ namespace Managers
             }
             
         }
-        
-        public Shared.TileOccupiedBy CalculateSpaceOccupation(Vector2Int position, Shared.TeamType selectedPieceTeam)
+
+        public Shared.TileOccupiedBy CalculateSpaceOccupation(ChessPiece[,] board, Vector2Int position,
+            Shared.TeamType selectedPieceTeam)
         {
             ChessPiece chessPiece;
             try
             {
-                chessPiece = ChessPieces[position.x, position.y];
+                chessPiece = board[position.x, position.y];
             }
             catch
             {
@@ -394,7 +395,31 @@ namespace Managers
 
             return selectedPieceTeam.Equals(chessPiece.team) ? Shared.TileOccupiedBy.FriendlyPiece : Shared.TileOccupiedBy.EnemyPiece;
         }
+        
+        public Shared.TileOccupiedBy CalculateSpaceOccupation(Vector2Int position, Shared.TeamType selectedPieceTeam)
+        {
+            return CalculateSpaceOccupation(ChessPieces, position, selectedPieceTeam);
+        }
 
+        public void GenerateAllMoves(Tile[,] tiles, ChessPiece[,] whiteTeam, ChessPiece[,] blackTeam)
+        {
+            foreach (var tile in tiles)
+                tile.ResetAttackStatus();
+            
+            foreach (var chessPiece in whiteTeam)
+            {
+                chessPiece.CalculateAvailablePositions();
+            }
+            
+            foreach (var chessPiece in blackTeam)
+            {
+                chessPiece.CalculateAvailablePositions();
+            }
+
+            foreach (var tile in tiles)
+                tile.DetermineAttackStatus();
+        }
+        
         public void GenerateAllMoves()
         {
             // Reset the Tiles Old AttackedBy status and the Attacking Pieces
@@ -415,6 +440,8 @@ namespace Managers
             TileManager.DetermineAttackStatus();
         }
 
+        
+        
         public void EliminateInvalidMoves(bool isCurrentTeamWhite)
         {
             TeamHasPossibleMoves = false;
@@ -423,7 +450,6 @@ namespace Managers
                     ? WhitePieces.Select(go => go.GetComponent<ChessPiece>()).ToList()
                     : BlackPieces.Select(go => go.GetComponent<ChessPiece>()).ToList();
             
-            var teamPlayer = friendlyPieces.First().MyPlayer;
             var protectedKing = isCurrentTeamWhite ? WhiteKing : BlackKing;
             var ignoredAttacks = isCurrentTeamWhite ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
             var isKingChecked = ((King)protectedKing).isChecked;
@@ -572,14 +598,12 @@ namespace Managers
 
                 if (fPiece.Moves.Count != 0)
                     TeamHasPossibleMoves = true;
-
-                teamPlayer.AllMoves.AddRange(fPiece.Moves);
             }
         }
         
-        public void EvaluateKingStatus()
+        public void EvaluateKingStatus(Shared.TeamType evaluatedTeam)
         {
-            var king = GameManager.IsWhiteTurn ? WhiteKing : BlackKing;
+            var king = evaluatedTeam == Shared.TeamType.White ? WhiteKing : BlackKing;
             var ignoredAttacks = GameManager.IsWhiteTurn ? Shared.AttackedBy.White : Shared.AttackedBy.Black;
             var kingCoords = new Vector2Int(king.currentX, king.currentY);
             var kingTile = TileManager.GetTile(kingCoords);

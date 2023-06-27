@@ -12,11 +12,6 @@ namespace ChessPieces
             pieceScore = 999;
         }
 
-        public void Update()
-        {
-            if (isChecked) ;
-        }
-
         public bool isChecked = false;
         public override void CalculateAvailablePositions()
         {

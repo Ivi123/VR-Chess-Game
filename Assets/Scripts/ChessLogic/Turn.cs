@@ -34,10 +34,18 @@ public class MovedPieces
     
     public void AddNewPieceAndPosition(ChessPiece piece, Vector2Int newPosition)
     {
-        var oldPosition = new Vector2Int(piece.currentX, piece.currentY);
-        var positionChange = new Tuple<Vector2Int, Vector2Int>(oldPosition, newPosition);
+        try
+        {
+            var oldPosition = new Vector2Int(piece.currentX, piece.currentY);
+            var positionChange = new Tuple<Vector2Int, Vector2Int>(oldPosition, newPosition);
 
-        Pieces.Add(piece);
-        PositionChanges.Add(positionChange);
+            Pieces.Add(piece);
+            PositionChanges.Add(positionChange);
+        }
+        catch (NullReferenceException e)
+        {
+            var a = 1;
+            Console.WriteLine(e);       
+        }
     }
 }

@@ -7,9 +7,6 @@ namespace Players
 {
     public class AIPlayer : Player
     {
-        public GameManager gameManager;
-        public MovementManager movementManager;
-
         public override void Update()
         {
             if (!IsMyTurn || !HasMoved) return;

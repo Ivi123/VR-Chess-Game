@@ -29,6 +29,18 @@ namespace ChessPieces
             Coords = moveCoords;
             Type = moveType;
         }
+
+        private Move(Move move)
+        {
+            Coords = move.Coords;
+            Type = move.Type;
+        }
+
+        public static List<Move> DeepCopy(List<Move> moves)
+        {
+            return moves.Select(move => new Move(move)).ToList();
+        }
+        
     }
     
     public abstract class ChessPiece : MonoBehaviour
@@ -107,6 +119,7 @@ namespace ChessPieces
             GetComponent<MeshRenderer>().material = Material;
         }
         
+        public abstract void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles);
         public abstract void CalculateAvailablePositions();
 
         public List<Move> CalculateAvailablePositionsWithoutUpdating()
