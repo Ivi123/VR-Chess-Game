@@ -120,9 +120,8 @@ namespace ChessPieces
         }
         
         public abstract void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles);
-        public abstract void CalculateAvailablePositions();
 
-        public List<Move> CalculateAvailablePositionsWithoutUpdating()
+        public List<Move> CalculateAvailablePositionsWithoutUpdating(ChessPiece[,] board, Tile[,] tiles)
         {
             if (currentX == -1 && currentY == -1)
             {
@@ -133,7 +132,7 @@ namespace ChessPieces
             var oldMoves = new List<Move>(Moves);
 
             //Calculate new moves
-            CalculateAvailablePositions();
+            CalculateAvailablePositions(board, tiles);
 
             // Save New Moves in a separate field 
             var newMoves = new List<Move>(Moves);
@@ -144,9 +143,9 @@ namespace ChessPieces
             return newMoves;
         }
 
-        public void AddToTileAttackingPieces(Vector2Int coords)
+        public void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
         {
-            var attackTile = MovementManager.TileManager.GetTile(coords);
+            var attackTile = tiles[coords.x, coords.y];
             var attackingPiecesList = team == Shared.TeamType.White
                 ? attackTile.WhiteAttackingPieces
                 : attackTile.BlackAttackingPieces;

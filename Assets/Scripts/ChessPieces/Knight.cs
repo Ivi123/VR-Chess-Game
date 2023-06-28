@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ChessLogic;
+using Managers;
 using UnityEngine;
 
 namespace ChessPieces
@@ -11,7 +12,7 @@ namespace ChessPieces
             pieceScore = 3;
         }
 
-        public override void CalculateAvailablePositions()
+        public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
         {
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
@@ -42,8 +43,8 @@ namespace ChessPieces
 
             possibleMoves.ForEach(move =>
             {
-                var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
-                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(move);
+                var occupationType = MovementManager.CalculateSpaceOccupation(board, move, team);
+                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(tiles, move);
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:

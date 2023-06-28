@@ -71,9 +71,9 @@ namespace Managers
         private void GenerateAllTiles()
         {
             TileManager.yOffset += transform.position.y;
-        
-
+            
             var tiles = new GameObject[TileManager.TileCountX, TileManager.TileCountY];
+            var tilesComponent = new Tile[TileManager.TileCountX, TileManager.TileCountY];
             //To easily determine the type of the generated tile we add the bool isTileTypeWhite and set it to true.
             // For each x iteration we negate the type as each new row starts with what the previous row ended
             // For each y iteration we negate the type as the adjacent tile should be of a different type.
@@ -84,11 +84,13 @@ namespace Managers
                 for (var y = 0; y < TileManager.TileCountY; y++)
                 {
                     tiles[x, y] = GenerateSingleTile(x, y, isTileTypeWhite);
+                    tilesComponent[x, y] = tiles[x, y].GetComponent<Tile>();
                     isTileTypeWhite = !isTileTypeWhite;
                 }
             }
 
-            TileManager.Tiles = tiles;
+            TileManager.TilesGameObjects = tiles;
+            TileManager.Tiles = tilesComponent;
         }
     
         private GameObject GenerateSingleTile(int x, int y, bool isTileWhite)
@@ -250,12 +252,13 @@ namespace Managers
                     var copyGo = Instantiate(prefabs[(int)currentPieceToCopy.type - 1], transform);
                     copyGo.SetActive(false);
                     
-                    var copyCp = copyGo.AddComponent<ChessPiece>();
+                    var copyCp = copyGo.GetComponent<ChessPiece>();
                     copyCp.team = currentPieceToCopy.team;
                     copyCp.type = currentPieceToCopy.type;
                     copyCp.startingPosition = currentPieceToCopy.startingPosition;
                     copyCp.currentX = currentPieceToCopy.currentX;
                     copyCp.currentY = currentPieceToCopy.currentY;
+                    copyCp.IsMoved = currentPieceToCopy.IsMoved;
 
                     copyBoard[x, y] = copyCp;
                 }
@@ -263,7 +266,7 @@ namespace Managers
 
             return copyBoard;
         }
-
+        
         public Tile[,] DeepCopyTiles()
         {
             var tiles = new Tile[TileManager.TileCountX, TileManager.TileCountY];

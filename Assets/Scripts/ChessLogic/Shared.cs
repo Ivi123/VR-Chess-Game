@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using ChessPieces;
+using Managers;
 using UnityEngine;
 
 namespace ChessLogic
@@ -73,7 +75,7 @@ namespace ChessLogic
             Continue
         }
         
-        public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece chessPiece, int stepX, int stepY)
+        public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece[,] board, Tile[,] tiles, ChessPiece chessPiece, int stepX, int stepY)
         {
             List<Move> possibleMoves = new();
 
@@ -85,11 +87,12 @@ namespace ChessLogic
                         : possibleMoves[^1].Coords;
 
                 Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
-                var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(possibleMove, chessPiece.team);
+                
+                var occupationType = MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
 
                 if (occupationType is TileOccupiedBy.EndOfTable) break;
 
-                chessPiece.AddToTileAttackingPieces(possibleMove);
+                chessPiece.AddToTileAttackingPieces(tiles, possibleMove);
                 
                 if (occupationType is TileOccupiedBy.FriendlyPiece) break;
                 if (TileOccupiedBy.EnemyPiece == occupationType)
