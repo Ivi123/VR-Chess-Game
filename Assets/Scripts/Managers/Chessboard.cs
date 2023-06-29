@@ -21,7 +21,7 @@ namespace Managers
 
         [Header("Game Objects")] 
         public GameObject undoButton;
-        public void StartGame()
+        public void StartGame(Shared.ChessboardConfig chessboardConfig)
         {
             MovementManager.WhitePieces = new List<GameObject>();
             MovementManager.BlackPieces = new List<GameObject>();
@@ -33,7 +33,16 @@ namespace Managers
             GenerateAllTiles();
             GenerateEliminationPositions();
 
-            SpawnAllPieces();
+            switch(chessboardConfig)
+            {
+                case Shared.ChessboardConfig.Normal:
+                    SpawnAllPieces();
+                    break;
+                case Shared.ChessboardConfig.Victory:
+                    SpawnPiecesForVictory();
+                    break;
+            }
+
             PositionAllPieces();
 
             undoButton.GetComponent<MeshRenderer>().enabled = true;
@@ -168,7 +177,55 @@ namespace Managers
 
             MovementManager.ChessPieces = chessPieces;
         }
-    
+
+        private void SpawnPiecesForVictory()
+        {
+            var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
+
+            // human player's team is black and it should be its turn
+            // black team
+            chessPieces[0, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
+            chessPieces[0, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
+            chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
+            MovementManager.SetKing(chessPieces[0, 3]);
+            chessPieces[0, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
+            chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
+            for (int i = 0; i < 4; i++)
+            {
+                chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            }
+            for (int i = 5; i < TileManager.TileCountX; i++)
+            {
+                chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            }
+
+            chessPieces[2, 2] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
+            chessPieces[2, 4] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[2, 6] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.Black);
+            chessPieces[4, 7] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
+
+            //white team
+            chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
+            chessPieces[7, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
+            chessPieces[7, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
+            MovementManager.SetKing(chessPieces[7, 3]);
+            chessPieces[7, 4] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.White);
+            chessPieces[7, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
+            chessPieces[7, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
+            chessPieces[5, 0] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[6, 0] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[6, 3] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[6, 4] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[5, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[5, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[5, 7] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[4, 1] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[4, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+
+            MovementManager.ChessPieces = chessPieces;
+        }
+
         public ChessPiece SpawnSinglePiece(ChessPieceType type, Shared.TeamType team)
         {
             var cpGameObject = Instantiate(prefabs[(int)type - 1], transform);

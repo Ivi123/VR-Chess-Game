@@ -74,7 +74,19 @@ namespace ChessLogic
             Defeat,
             Continue
         }
-        
+
+        public enum ChessboardConfig
+        {
+            Normal,
+            Victory,
+            Defeat,
+            Draw,
+            ShortCastle,
+            LongCastle,
+            EnPassant,
+            Promotion
+        }
+
         public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece[,] board, Tile[,] tiles, ChessPiece chessPiece, int stepX, int stepY)
         {
             List<Move> possibleMoves = new();
