@@ -207,8 +207,8 @@ namespace Managers
             chessPieces[0, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
             chessPieces[0, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
             chessPieces[0, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
-            chessPieces[0, 4] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
-            MovementManager.SetKing(chessPieces[0, 4]);
+            chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
+            MovementManager.SetKing(chessPieces[0, 3]);
             chessPieces[0, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
             chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
             for (int i = 0; i < 4; i++)
@@ -226,9 +226,9 @@ namespace Managers
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
             chessPieces[7, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
-            chessPieces[7, 3] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.Black);
-            chessPieces[7, 4] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
-            MovementManager.SetKing(chessPieces[7, 4]);
+            chessPieces[7, 4] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.Black);
+            chessPieces[7, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
+            MovementManager.SetKing(chessPieces[7, 3]);
             chessPieces[7, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
             chessPieces[7, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
@@ -252,8 +252,8 @@ namespace Managers
             // human player's team is black and it should be bot's turn
             // white team
             chessPieces[0, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
-            chessPieces[0, 4] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
-            MovementManager.SetKing(chessPieces[0, 4]);
+            chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
+            MovementManager.SetKing(chessPieces[0, 3]);
             chessPieces[0, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             
             chessPieces[1, 1] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
@@ -267,6 +267,7 @@ namespace Managers
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
+            ((King)chessPieces[7, 0]).IsMoved = true;
             MovementManager.SetKing(chessPieces[7, 0]);
             chessPieces[7, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
@@ -285,8 +286,8 @@ namespace Managers
 
             // human player's team is white and it should be its turn
             // white team
-            chessPieces[0, 4] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
-            MovementManager.SetKing(chessPieces[0, 4]);
+            chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
+            MovementManager.SetKing(chessPieces[0, 3]);
             chessPieces[0, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             chessPieces[2, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
             chessPieces[2, 5] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
@@ -298,6 +299,7 @@ namespace Managers
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
+            ((King)chessPieces[7, 0]).IsMoved = true;
             MovementManager.SetKing(chessPieces[7, 0]);
             chessPieces[6, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
             chessPieces[5, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
@@ -311,8 +313,8 @@ namespace Managers
 
             // human player's team is white and it should be its turn
             // white team
-            chessPieces[0, 4] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
-            MovementManager.SetKing(chessPieces[0, 4]);
+            chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
+            MovementManager.SetKing(chessPieces[0, 3]);
             chessPieces[2, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
             chessPieces[2, 5] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
             chessPieces[2, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
@@ -322,13 +324,14 @@ namespace Managers
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
+            ((King)chessPieces[7, 0]).IsMoved = true;
             MovementManager.SetKing(chessPieces[7, 0]);
             chessPieces[5, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
 
             MovementManager.ChessPieces = chessPieces;
         }
         
-          private void SpawnAllPiecesForLongCastle()
+        private void SpawnAllPiecesForLongCastle()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
 
@@ -467,7 +470,7 @@ namespace Managers
             return copyBoard;
         }
         
-        public Tile[,] DeepCopyTiles(Tile[,] tilesToCopy)
+        public Tile[,] DeepCopyTiles(Tile[,] tilesToCopy, ChessPiece[,] boardCopy)
         {
             var tileGo = new GameObject();
             var tiles = new Tile[TileManager.TileCountX, TileManager.TileCountY];
@@ -480,38 +483,22 @@ namespace Managers
                     
                     tile.Position = new Vector2Int(x, y);
                     tiles[x, y] = tile;
-                    tile.WhiteAttackingPieces = DeepCopyCpList(tileToCopy.WhiteAttackingPieces);
-                    tile.BlackAttackingPieces = DeepCopyCpList(tileToCopy.BlackAttackingPieces);
+                    tile.WhiteAttackingPieces = new List<ChessPiece>(); 
+                    tile.BlackAttackingPieces = new List<ChessPiece>(); 
+                    
+                    foreach (var whiteAttackingPiece in tileToCopy.WhiteAttackingPieces)
+                        if (new Vector2Int(whiteAttackingPiece.currentX, whiteAttackingPiece.currentY) != MovedPieces.EliminationPosition)
+                            tile.WhiteAttackingPieces.Add(boardCopy[whiteAttackingPiece.currentX, whiteAttackingPiece.currentY]);
+                    
+                    foreach (var blackAttackingPiece in tileToCopy.BlackAttackingPieces)
+                        if (new Vector2Int(blackAttackingPiece.currentX, blackAttackingPiece.currentY) != MovedPieces.EliminationPosition)
+                            tile.BlackAttackingPieces.Add(boardCopy[blackAttackingPiece.currentX, blackAttackingPiece.currentY]);
+
                     tile.AttackedBy = tileToCopy.AttackedBy;
                 }
             }
 
             return tiles;
-        }
-
-        private List<ChessPiece> DeepCopyCpList(List<ChessPiece> piecesToCopy)
-        {
-            var deepCopyList = new List<ChessPiece>();
-            var gameObject = new GameObject();
-
-            foreach (var pieceToCopy in piecesToCopy)
-            {
-                var copyCpType = ChessPieceComponentMap[pieceToCopy.type];
-                var copyCp = (ChessPiece)gameObject.AddComponent(copyCpType);
-                    
-                copyCp.team = pieceToCopy.team;
-                copyCp.type = pieceToCopy.type;
-                copyCp.startingPosition = pieceToCopy.startingPosition;
-                copyCp.currentX = pieceToCopy.currentX;
-                copyCp.currentY = pieceToCopy.currentY;
-                copyCp.IsMoved = pieceToCopy.IsMoved;
-                copyCp.protectsKing = pieceToCopy.protectsKing;
-                copyCp.MovementManager = MovementManager;
-                
-                deepCopyList.Add(copyCp);
-            }
-            
-            return deepCopyList;
         }
     }
 }

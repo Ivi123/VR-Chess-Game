@@ -6479,6 +6479,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1512167357}
   team: 0
+  whiteTeamSelector: {fileID: 909695387}
+  blackTeamSelector: {fileID: 1923334974}
 --- !u!64 &909695388
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -8334,6 +8336,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1512167357}
   team: 0
+  whiteTeamSelector: {fileID: 909695387}
+  blackTeamSelector: {fileID: 1923334974}
 --- !u!1 &1302381716
 GameObject:
   m_ObjectHideFlags: 0
@@ -15666,6 +15670,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameManager: {fileID: 1512167357}
   team: 1
+  whiteTeamSelector: {fileID: 909695387}
+  blackTeamSelector: {fileID: 1923334974}
 --- !u!64 &1923334975
 MeshCollider:
   m_ObjectHideFlags: 0

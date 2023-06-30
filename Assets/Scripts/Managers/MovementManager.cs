@@ -240,7 +240,6 @@ namespace Managers
 
             try
             {
-
                 board[enemyPiece.currentX, enemyPiece.currentY] = null;
                 enemyPiece.currentX = -1;
                 enemyPiece.currentY = -1;
@@ -382,6 +381,7 @@ namespace Managers
         public void GenerateAllMoves(Turn lastTurn, Player player, ChessPiece[,] board, Tile[,] tiles,
             List<ChessPiece> whiteTeam, List<ChessPiece> blackTeam)
         {
+            var startTime = Time.realtimeSinceStartup;
             var piecesToRecalculate = new HashSet<ChessPiece>();
             if (lastTurn == null)
             {
@@ -488,6 +488,7 @@ namespace Managers
 
             foreach (var tile in tiles)
                 tile.DetermineAttackStatus();
+            Debug.Log("Generation Time: " + (Time.realtimeSinceStartup - startTime));
         }
 
         public void EvaluateKingStatus(Tile[,] tiles, King king)
