@@ -19,6 +19,31 @@ public class TeamSelector : MonoBehaviour
 
     public void SelectTeam()
     {
-        gameManager.SelectTeam(team, transform.position);
+        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.Normal);
+    }
+    
+    public void SelectTeamForVictory()
+    {
+        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.Victory);
+    }
+    
+    public void SelectTeamForDefeat()
+    {
+        gameManager.SelectTeam(Shared.TeamType.Black, transform.position, Shared.ChessboardConfig.Defeat);
+    }
+    
+    public void SelectTeamForDraw()
+    {
+        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.Draw);
+    }
+    
+    public void SelectTeamForProm()
+    {
+        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.Promotion);
+    }
+    
+    public void SelectTeamForLongCastle()
+    {
+        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.LongCastle);
     }
 }
