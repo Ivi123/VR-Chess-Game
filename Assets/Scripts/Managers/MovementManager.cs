@@ -382,109 +382,21 @@ namespace Managers
             List<ChessPiece> whiteTeam, List<ChessPiece> blackTeam)
         {
             var startTime = Time.realtimeSinceStartup;
-            var piecesToRecalculate = new HashSet<ChessPiece>();
-            if (lastTurn == null)
-            {
-                piecesToRecalculate.UnionWith(whiteTeam);
-                piecesToRecalculate.UnionWith(blackTeam);
-            }
-            else
-            {
-                for (var i = 0; i < lastTurn.PiecesMovedInThisTurn.Pieces.Count; i++)
-                {
-                    var positionChanges = lastTurn.PiecesMovedInThisTurn.PositionChanges[i];
-                    if (positionChanges.Item2 == MovedPieces.EliminationPosition) continue;
-                    
-                    var chessPiece = board[positionChanges.Item2.x, positionChanges.Item2.y];
-                    piecesToRecalculate.Add(chessPiece);
-
-                    var item1Tile = tiles[positionChanges.Item1.x, positionChanges.Item1.y];
-                    var item2Tile = tiles[positionChanges.Item2.x, positionChanges.Item2.y];
-
-                    piecesToRecalculate.UnionWith(item1Tile.WhiteAttackingPieces.Count != 0
-                        ? item1Tile.WhiteAttackingPieces
-                        : new List<ChessPiece>());
-                    piecesToRecalculate.UnionWith(item1Tile.BlackAttackingPieces.Count != 0
-                        ? item1Tile.BlackAttackingPieces
-                        : new List<ChessPiece>());
-                    
-                    piecesToRecalculate.UnionWith(item2Tile.WhiteAttackingPieces.Count != 0
-                        ? item2Tile.WhiteAttackingPieces
-                        : new List<ChessPiece>());
-                    piecesToRecalculate.UnionWith(item2Tile.BlackAttackingPieces.Count != 0
-                        ? item2Tile.BlackAttackingPieces
-                        : new List<ChessPiece>());
-                    
-                    //Check for surrounding pieces
-                    var surroundingPositions = new List<Vector2Int>
-                    {
-                        new(item1Tile.Position.x + 1, item1Tile.Position.y),
-                        new(item1Tile.Position.x - 1, item1Tile.Position.y),
-                        new(item1Tile.Position.x, item1Tile.Position.y + 1),
-                        new(item1Tile.Position.x, item1Tile.Position.y - 1),
-
-                        new(item1Tile.Position.x + 1, item1Tile.Position.y + 1),
-                        new(item1Tile.Position.x + 1, item1Tile.Position.y - 1),
-                        new(item1Tile.Position.x - 1, item1Tile.Position.y + 1),
-                        new(item1Tile.Position.x - 1, item1Tile.Position.y - 1),
-                        
-                        new(item2Tile.Position.x + 1, item2Tile.Position.y),
-                        new(item2Tile.Position.x - 1, item2Tile.Position.y),
-                        new(item2Tile.Position.x, item2Tile.Position.y + 1),
-                        new(item2Tile.Position.x, item2Tile.Position.y - 1),
-
-                        new(item2Tile.Position.x + 1, item2Tile.Position.y + 1),
-                        new(item2Tile.Position.x + 1, item2Tile.Position.y - 1),
-                        new(item2Tile.Position.x - 1, item2Tile.Position.y + 1),
-                        new(item2Tile.Position.x - 1, item2Tile.Position.y - 1)
-                    };
-                    
-                    foreach (var surroundingPosition in surroundingPositions)
-                    {
-                       var occupationType = CalculateSpaceOccupation(board, surroundingPosition, player.Team);
-                       switch (occupationType)
-                       {
-                           case Shared.TileOccupiedBy.FriendlyPiece or Shared.TileOccupiedBy.EnemyPiece:
-                               piecesToRecalculate.Add(board[surroundingPosition.x, surroundingPosition.y]);
-                               break;
-                           case Shared.TileOccupiedBy.None:
-                               var surroundingTile = tiles[surroundingPosition.x, surroundingPosition.y];
-                               piecesToRecalculate.UnionWith(surroundingTile.WhiteAttackingPieces.Count != 0
-                                   ? surroundingTile.WhiteAttackingPieces
-                                   : new List<ChessPiece>());
-                               piecesToRecalculate.UnionWith(surroundingTile.BlackAttackingPieces.Count != 0
-                                   ? surroundingTile.BlackAttackingPieces
-                                   : new List<ChessPiece>());
-                               break;
-                       }
-                    }
-                }
-
-                piecesToRecalculate.UnionWith(whiteTeam.FindAll(cp => cp.protectsKing));
-                piecesToRecalculate.UnionWith(blackTeam.FindAll(cp => cp.protectsKing));
-                
-                var whiteKing = (King)whiteTeam.First(p => p.type == ChessPieceType.King);
-                piecesToRecalculate.Add(whiteKing);
-                if(whiteKing.isChecked)
-                    piecesToRecalculate.UnionWith(whiteTeam);
-
-                var blackKing = (King)blackTeam.First(p => p.type == ChessPieceType.King);
-                piecesToRecalculate.Add(blackKing);
-                if(blackKing.isChecked)
-                    piecesToRecalculate.UnionWith(blackTeam);
-            }
-            
-            foreach (var chessPiece in piecesToRecalculate)
-                chessPiece.CalculateAvailablePositions(board, tiles);
             
             foreach (var tile in tiles)
                 tile.ResetAttackStatus();
 
             foreach (var chessPiece in whiteTeam)
+            {
+                chessPiece.CalculateAvailablePositions(board, tiles);
                 chessPiece.MarkAttackedTiles(board, tiles);
+            }
 
-            foreach (var chessPiece in blackTeam) 
+            foreach (var chessPiece in blackTeam)
+            {
+                chessPiece.CalculateAvailablePositions(board, tiles);
                 chessPiece.MarkAttackedTiles(board, tiles);
+            }
 
             foreach (var tile in tiles)
                 tile.DetermineAttackStatus();
