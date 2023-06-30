@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ChessLogic;
 using Managers;
+using Players;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 namespace ChessPieces
 {
@@ -17,6 +19,30 @@ namespace ChessPieces
         King = 6
     }
 
+    public struct Move
+    {
+        public Vector2Int Coords { get; set; }
+        public Shared.MoveType Type { get; set; }
+        
+        public Move(Vector2Int moveCoords, Shared.MoveType moveType)
+        {
+            Coords = moveCoords;
+            Type = moveType;
+        }
+
+        private Move(Move move)
+        {
+            Coords = move.Coords;
+            Type = move.Type;
+        }
+
+        public static List<Move> DeepCopy(List<Move> moves)
+        {
+            return moves.Select(move => new Move(move)).ToList();
+        }
+        
+    }
+    
     public abstract class ChessPiece : MonoBehaviour
     {
         public Shared.TeamType team;
@@ -24,7 +50,8 @@ namespace ChessPieces
         public int currentX;
         public int currentY;
         public ChessPieceType type;
-
+        public bool protectsKing;
+        
         // Art
         public Material Material { get; set; }
 
@@ -32,12 +59,13 @@ namespace ChessPieces
         public Quaternion DesiredRotation { get; set; }
         private Vector3 position;
         protected bool isMoved = false;
-        public Moves Moves { get; set; }
-
+        public int pieceScore;
+        public List<Move> Moves { get; set; }
         public bool IsMoved { get => isMoved; set => isMoved = value; }
         public Tile HoveringTile { get; set; }
         public MovementManager MovementManager { get; set; }
-
+        public Player MyPlayer { get; set; }
+        
         //---------------------------------------------------- Methods ------------------------------------------------------
 
         public void Start()
@@ -61,11 +89,18 @@ namespace ChessPieces
             transform.SetPositionAndRotation(position, DesiredRotation);
             transform.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeAll;
             HoveringTile = null;
-
-            if (!MovementManager.GameManager.IsPlayerTurn && MovementManager.GameManager.GameStatus == Shared.GameStatus.Continue)
-                MovementManager.GameManager.MakeBotTurn();
         }
 
+        public void EnablePickUpOnPiece()
+        {
+            gameObject.GetComponent<XRGrabInteractable>().enabled = true;
+        }
+
+        public void DisablePickUpOnPiece()
+        {
+            gameObject.GetComponent<XRGrabInteractable>().enabled = false;
+        }
+        
         public void SavePosition()
         {
             var transformPosition = transform.position;
@@ -82,42 +117,26 @@ namespace ChessPieces
         {
             GetComponent<MeshRenderer>().material = Material;
         }
-
-        public List<Vector2Int> GetAllPossibleMoves()
-        {
-            var allMoves = Moves.AvailableMoves.Select(move => new Vector2Int(move.x, move.y)).ToList();
-            allMoves.AddRange(Moves.AttackMoves.Select(move => new Vector2Int(move.x, move.y)).ToList());
-
-            return allMoves;
-        }
         
-        public abstract void CalculateAvailablePositions();
+        public abstract void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles);
 
-        public Moves CalculateAvailablePositionsWithoutUpdating()
+        public abstract void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles);
+
+        public List<Move> CalculateAvailablePositionsWithoutUpdating(ChessPiece[,] board, Tile[,] tiles)
         {
             if (currentX == -1 && currentY == -1)
             {
-                return new Moves();
+                return new List<Move>();
             } 
             
             // Save Old Moves
-            var oldMoves = new Moves
-            {
-                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
-                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
-                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
-            };
+            var oldMoves = new List<Move>(Moves);
 
             //Calculate new moves
-            CalculateAvailablePositions();
+            CalculateAvailablePositions(board, tiles);
 
             // Save New Moves in a separate field 
-            var newMoves = new Moves
-            {
-                AvailableMoves = new List<Vector2Int>(Moves.AvailableMoves),
-                AttackMoves = new List<Vector2Int>(Moves.AttackMoves),
-                SpecialMoves = new List<SpecialMove>(Moves.SpecialMoves)
-            };
+            var newMoves = new List<Move>(Moves);
 
             //Revert piece moves back to the old set
             Moves = oldMoves;
@@ -125,9 +144,9 @@ namespace ChessPieces
             return newMoves;
         }
 
-        public void AddToTileAttackingPieces(Vector2Int coords)
+        protected void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
         {
-            var attackTile = MovementManager.TileManager.GetTile(coords);
+            var attackTile = tiles[coords.x, coords.y];
             var attackingPiecesList = team == Shared.TeamType.White
                 ? attackTile.WhiteAttackingPieces
                 : attackTile.BlackAttackingPieces;

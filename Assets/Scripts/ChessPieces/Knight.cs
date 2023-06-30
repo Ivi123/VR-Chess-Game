@@ -1,14 +1,21 @@
 using System.Collections.Generic;
 using ChessLogic;
+using Managers;
 using UnityEngine;
 
 namespace ChessPieces
 {
     public class Knight : ChessPiece
     {
-        public override void CalculateAvailablePositions()
+        public void Awake()
         {
-            Moves = new Moves();
+            pieceScore = 3;
+        }
+
+        public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
+        {
+            protectsKing = false;
+            Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
             Vector2Int horseForwardMove1 = new(currentX + (direction * 2), currentY + 1);
@@ -37,18 +44,23 @@ namespace ChessPieces
 
             possibleMoves.ForEach(move =>
             {
-                var occupationType = MovementManager.CalculateSpaceOccupation(move, team);
-                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(move);
+                var occupationType = MovementManager.CalculateSpaceOccupation(board, move, team);
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
-                        Moves.AvailableMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Normal));
                         break;
                     case Shared.TileOccupiedBy.EnemyPiece:
-                        Moves.AttackMoves.Add(move);
+                        Moves.Add(new Move(move, Shared.MoveType.Attack));
                         break;
                 }
             });
+        }
+
+        public override void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles)
+        {
+            foreach (var move in Moves)
+                AddToTileAttackingPieces(tiles, move.Coords);
         }
     }
 }

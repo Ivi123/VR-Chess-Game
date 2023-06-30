@@ -15,7 +15,8 @@ namespace Managers
         public const int TileCountX = 8;
         public const int TileCountY = 8;
         public Vector3 Bounds { get; set; }
-        public GameObject[,] Tiles { get; set; }
+        public GameObject[,] TilesGameObjects { get; set; }
+        public Tile[,] Tiles { get; set; }
 
         public Vector3 GetTileCenter(int x, int y)
         {
@@ -24,36 +25,25 @@ namespace Managers
 
         public void UpdateTileMaterialAfterMove(ChessPiece chessPiece)
         {
-            foreach (var move in chessPiece.Moves.AvailableMoves)
-            {
-                UpdateTileMaterial(new Vector2Int(move.x, move.y), Shared.TileType.Default);
-                Tiles[move.x, move.y].GetComponent<Tile>().IsAvailableTile = false;
-            }
-
-            foreach (var move in chessPiece.Moves.AttackMoves)
-            {
-                UpdateTileMaterial(new Vector2Int(move.x, move.y), Shared.TileType.Default);
-                Tiles[move.x, move.y].GetComponent<Tile>().IsAttackTile = false;
-            }
-            
-            foreach (var move in chessPiece.Moves.SpecialMoves)
+            foreach (var move in chessPiece.Moves)
             {
                 UpdateTileMaterial(new Vector2Int(move.Coords.x, move.Coords.y), Shared.TileType.Default);
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsSpecialTile = false;                
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAttackTile = false;
-                Tiles[move.Coords.x, move.Coords.y].GetComponent<Tile>().IsAvailableTile = false;
+                var tile = GetTile(move.Coords);
+                
+                tile.IsSpecialTile = false;                
+                tile.IsAttackTile = false;
+                tile.IsAvailableTile = false;
             }
-
         }
         
         public void UpdateTileMaterial(Vector2Int tileCoord, Shared.TileType materialType)
         {
-            Tiles[tileCoord.x, tileCoord.y].GetComponent<MeshRenderer>().material = tilesMaterials[(int)materialType];
+            TilesGameObjects[tileCoord.x, tileCoord.y].GetComponent<MeshRenderer>().material = tilesMaterials[(int)materialType];
         }
 
         public bool IsTileWhite(Vector2Int tileCoord)
         {
-            return Tiles[tileCoord.x, tileCoord.y].GetComponent<Tile>().IsWhiteTile;
+            return TilesGameObjects[tileCoord.x, tileCoord.y].GetComponent<Tile>().IsWhiteTile;
         }
         
         public void HandleTileTrigger(Vector2Int position, bool enterTrigger, Shared.MovementType movementType)
@@ -65,7 +55,7 @@ namespace Managers
             }
             else
             {
-                var tile = Tiles[position.x, position.y];
+                var tile = TilesGameObjects[position.x, position.y];
                 if (tile.GetComponent<Tile>().IsWhiteTile)
                 {
                     var tileType = Shared.MovementType.Normal == movementType ? Shared.TileType.AvailableWhite : Shared.TileType.AttackTileWhite;
@@ -78,31 +68,10 @@ namespace Managers
                 }
             }
         }
-
-        public void ResetTileAttackedStatus()
-        {
-            foreach (var tile in Tiles)
-            {
-                tile.GetComponent<Tile>().ResetAttackStatus();
-            }
-        }
-
-        public void DetermineAttackStatus()
-        {
-            foreach (var tile in Tiles)
-            {
-                tile.GetComponent<Tile>().DetermineAttackStatus();
-            }
-        }
         
         public Tile GetTile(Vector2Int tileCoord)
         {
-            return GetTile(tileCoord.x, tileCoord.y);
-        }
-
-        public Tile GetTile(int x, int y)
-        {
-            return Tiles[x, y].GetComponent<Tile>();
+            return Tiles[tileCoord.x, tileCoord.y];
         }
     }
 }

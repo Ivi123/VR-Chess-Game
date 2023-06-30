@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using ChessPieces;
+using Managers;
 using UnityEngine;
 
 namespace ChessLogic
@@ -51,7 +53,9 @@ namespace ChessLogic
             ShortCastle,
             LongCastle,
             Promotion,
-            Normal
+            AttackPromotion,
+            Normal,
+            Attack
         }
 
         public enum AttackedBy
@@ -64,42 +68,44 @@ namespace ChessLogic
 
         public enum GameStatus
         {
+            NotStarted,
             Draw,
             Victory,
             Defeat,
             Continue
         }
         
-        public static void GeneratePossibleMovesBasedOnXAndYStep(Moves moves, ChessPiece chessPiece, int stepX, int stepY)
+        public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece[,] board, Tile[,] tiles, ChessPiece chessPiece, int stepX, int stepY)
         {
-            List<Vector2Int> possibleMoves = new();
+            List<Move> possibleMoves = new();
 
             while (true)
             {
                 var lastAddedMove =
                     possibleMoves.Count == 0
                         ? new Vector2Int(chessPiece.currentX, chessPiece.currentY)
-                        : possibleMoves[^1];
+                        : possibleMoves[^1].Coords;
 
                 Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
-                var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(possibleMove, chessPiece.team);
+                
+                var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
 
                 if (occupationType is TileOccupiedBy.EndOfTable) break;
-
-                chessPiece.AddToTileAttackingPieces(possibleMove);
-                
-                if (occupationType is TileOccupiedBy.FriendlyPiece) break;
+                if (occupationType is TileOccupiedBy.FriendlyPiece)
+                {
+                    possibleMoves.Add(new Move(possibleMove, MoveType.Normal)); 
+                    break;
+                }
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
-                    moves.AttackMoves.Add(possibleMove);
+                    possibleMoves.Add(new Move(possibleMove, MoveType.Attack));
                     break;
                 }
 
-                moves.AvailableMoves.Add(possibleMove);
-                possibleMoves.Add(possibleMove);
+                possibleMoves.Add(new Move(possibleMove, MoveType.Normal));
             }
 
+            return possibleMoves;
         }
-
     }
 }

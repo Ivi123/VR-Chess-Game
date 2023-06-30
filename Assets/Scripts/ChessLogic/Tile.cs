@@ -30,7 +30,24 @@ namespace ChessLogic
             BlackAttackingPieces = new List<ChessPiece>();
             AttackedBy = Shared.AttackedBy.None;
         }
-    
+
+        public void DetermineTileTypeFromMove(Move move)
+        {
+            IsAvailableTile = move.Type is Shared.MoveType.Normal or Shared.MoveType.Promotion or Shared.MoveType.LongCastle
+                or Shared.MoveType.ShortCastle;
+            IsAttackTile = move.Type is Shared.MoveType.Attack or Shared.MoveType.AttackPromotion
+                or Shared.MoveType.EnPassant;
+            IsSpecialTile = move.Type is Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion
+                or Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle or Shared.MoveType.EnPassant;
+        }
+
+        public void ResetTileType()
+        {
+            IsAttackTile = false;
+            IsSpecialTile = false;
+            IsAvailableTile = false;
+        }
+        
         public void TriggeredAvailableMove(Shared.MovementType movementType)
         {
             TileManager.HandleTileTrigger(Position, true, movementType);
