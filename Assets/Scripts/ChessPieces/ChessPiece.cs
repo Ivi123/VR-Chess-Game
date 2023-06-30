@@ -50,7 +50,8 @@ namespace ChessPieces
         public int currentX;
         public int currentY;
         public ChessPieceType type;
-
+        public bool protectsKing;
+        
         // Art
         public Material Material { get; set; }
 
@@ -60,11 +61,9 @@ namespace ChessPieces
         protected bool isMoved = false;
         public int pieceScore;
         public List<Move> Moves { get; set; }
-
         public bool IsMoved { get => isMoved; set => isMoved = value; }
         public Tile HoveringTile { get; set; }
         public MovementManager MovementManager { get; set; }
-
         public Player MyPlayer { get; set; }
         
         //---------------------------------------------------- Methods ------------------------------------------------------
@@ -121,6 +120,8 @@ namespace ChessPieces
         
         public abstract void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles);
 
+        public abstract void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles);
+
         public List<Move> CalculateAvailablePositionsWithoutUpdating(ChessPiece[,] board, Tile[,] tiles)
         {
             if (currentX == -1 && currentY == -1)
@@ -143,7 +144,7 @@ namespace ChessPieces
             return newMoves;
         }
 
-        public void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
+        protected void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
         {
             var attackTile = tiles[coords.x, coords.y];
             var attackingPiecesList = team == Shared.TeamType.White

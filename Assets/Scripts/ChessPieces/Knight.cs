@@ -14,6 +14,7 @@ namespace ChessPieces
 
         public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
         {
+            protectsKing = false;
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
 
@@ -44,7 +45,6 @@ namespace ChessPieces
             possibleMoves.ForEach(move =>
             {
                 var occupationType = MovementManager.CalculateSpaceOccupation(board, move, team);
-                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(tiles, move);
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
@@ -55,6 +55,12 @@ namespace ChessPieces
                         break;
                 }
             });
+        }
+
+        public override void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles)
+        {
+            foreach (var move in Moves)
+                AddToTileAttackingPieces(tiles, move.Coords);
         }
     }
 }

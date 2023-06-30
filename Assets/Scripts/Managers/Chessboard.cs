@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ChessLogic;
 using ChessPieces;
@@ -11,7 +12,17 @@ namespace Managers
         // Managers
         public MovementManager MovementManager { get; set; }
         public TileManager TileManager { get; set; }
-    
+
+        private static readonly Dictionary<ChessPieceType, Type> ChessPieceComponentMap = new Dictionary<ChessPieceType, Type>()
+        {
+            { ChessPieceType.Pawn, typeof(Pawn) },
+            { ChessPieceType.Bishop, typeof(Bishop) },
+            { ChessPieceType.Rook, typeof(Rook) },
+            { ChessPieceType.Knight, typeof(Knight) },
+            { ChessPieceType.Queen, typeof(Queen) },
+            { ChessPieceType.King, typeof(King) },
+        };
+
         //Generation Logic
         private Vector3 boardCenter;
 
@@ -25,7 +36,7 @@ namespace Managers
         {
             MovementManager.WhitePieces = new List<GameObject>();
             MovementManager.BlackPieces = new List<GameObject>();
-        
+
             boardCenter = new Vector3(transform.position.x * -1, 0, transform.position.z * -1);
             TileManager.Bounds = 
                 new Vector3((TileManager.TileCountX / 2.0f) * TileManager.TileSize, 0, (TileManager.TileCountY / 2.0f) * TileManager.TileSize) + boardCenter;
@@ -233,7 +244,7 @@ namespace Managers
 
             MovementManager.ChessPieces = chessPieces;
         }
-
+    
         public void SpawnPiecesForDefeat()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -268,7 +279,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
         
-         public void SpawnPiecesForDraw()
+        public void SpawnPiecesForDraw()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
 
@@ -294,7 +305,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
         
-          private void SpawnAllPiecesForProm()
+        private void SpawnAllPiecesForProm()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
 
@@ -351,7 +362,7 @@ namespace Managers
 
             MovementManager.ChessPieces = chessPieces;
         }
-          
+        
         public ChessPiece SpawnSinglePiece(ChessPieceType type, Shared.TeamType team)
         {
             var cpGameObject = Instantiate(prefabs[(int)type - 1], transform);
@@ -421,6 +432,9 @@ namespace Managers
 
         public ChessPiece[,] DeepCopyBoard(ChessPiece[,] boardToCopy)
         {
+            var startTime = Time.realtimeSinceStartup;
+            
+            var copyGo = new GameObject();
             var copyBoard = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
             var currentBoard = boardToCopy;
 
@@ -432,41 +446,72 @@ namespace Managers
 
                     var currentPieceToCopy = currentBoard[x, y];
                     
-                    var copyGo = Instantiate(prefabs[(int)currentPieceToCopy.type - 1], transform);
-                    copyGo.SetActive(false);
+                    var copyCpType = ChessPieceComponentMap[currentPieceToCopy.type];
+                    var copyCp = (ChessPiece)copyGo.AddComponent(copyCpType);
                     
-                    var copyCp = copyGo.GetComponent<ChessPiece>();
                     copyCp.team = currentPieceToCopy.team;
                     copyCp.type = currentPieceToCopy.type;
                     copyCp.startingPosition = currentPieceToCopy.startingPosition;
                     copyCp.currentX = currentPieceToCopy.currentX;
                     copyCp.currentY = currentPieceToCopy.currentY;
                     copyCp.IsMoved = currentPieceToCopy.IsMoved;
+                    copyCp.protectsKing = currentPieceToCopy.protectsKing;
+                    copyCp.Moves = Move.DeepCopy(currentPieceToCopy.Moves);
+                    copyCp.MovementManager = MovementManager;
 
                     copyBoard[x, y] = copyCp;
                 }
             }
 
+            Debug.Log("Deep Copy Board Time " + (Time.realtimeSinceStartup - startTime));
             return copyBoard;
         }
         
-        public Tile[,] DeepCopyTiles()
+        public Tile[,] DeepCopyTiles(Tile[,] tilesToCopy)
         {
+            var tileGo = new GameObject();
             var tiles = new Tile[TileManager.TileCountX, TileManager.TileCountY];
             for (var x = 0; x < TileManager.TileCountX; x++)
             {
                 for (var y = 0; y < TileManager.TileCountY; y++)
                 {
-                    var tileGo = new GameObject();
+                    var tileToCopy = tilesToCopy[x, y];
                     var tile = tileGo.AddComponent<Tile>();
-                    tileGo.SetActive(false);
                     
                     tile.Position = new Vector2Int(x, y);
                     tiles[x, y] = tile;
+                    tile.WhiteAttackingPieces = DeepCopyCpList(tileToCopy.WhiteAttackingPieces);
+                    tile.BlackAttackingPieces = DeepCopyCpList(tileToCopy.BlackAttackingPieces);
+                    tile.AttackedBy = tileToCopy.AttackedBy;
                 }
             }
 
             return tiles;
+        }
+
+        private List<ChessPiece> DeepCopyCpList(List<ChessPiece> piecesToCopy)
+        {
+            var deepCopyList = new List<ChessPiece>();
+            var gameObject = new GameObject();
+
+            foreach (var pieceToCopy in piecesToCopy)
+            {
+                var copyCpType = ChessPieceComponentMap[pieceToCopy.type];
+                var copyCp = (ChessPiece)gameObject.AddComponent(copyCpType);
+                    
+                copyCp.team = pieceToCopy.team;
+                copyCp.type = pieceToCopy.type;
+                copyCp.startingPosition = pieceToCopy.startingPosition;
+                copyCp.currentX = pieceToCopy.currentX;
+                copyCp.currentY = pieceToCopy.currentY;
+                copyCp.IsMoved = pieceToCopy.IsMoved;
+                copyCp.protectsKing = pieceToCopy.protectsKing;
+                copyCp.MovementManager = MovementManager;
+                
+                deepCopyList.Add(copyCp);
+            }
+            
+            return deepCopyList;
         }
     }
 }
