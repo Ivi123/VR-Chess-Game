@@ -88,13 +88,14 @@ namespace ChessLogic
 
                 Vector2Int possibleMove = new(lastAddedMove.x + stepX, lastAddedMove.y + stepY);
                 
-                var occupationType = MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
+                var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
 
                 if (occupationType is TileOccupiedBy.EndOfTable) break;
-
-                chessPiece.AddToTileAttackingPieces(tiles, possibleMove);
-                
-                if (occupationType is TileOccupiedBy.FriendlyPiece) break;
+                if (occupationType is TileOccupiedBy.FriendlyPiece)
+                {
+                    possibleMoves.Add(new Move(possibleMove, MoveType.Normal)); 
+                    break;
+                }
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
                     possibleMoves.Add(new Move(possibleMove, MoveType.Attack));

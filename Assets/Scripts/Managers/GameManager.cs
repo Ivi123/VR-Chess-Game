@@ -5,6 +5,7 @@ using System.Linq;
 using ChessLogic;
 using ChessPieces;
 using Players;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 
@@ -37,7 +38,8 @@ namespace Managers
         private HumanPlayer HumanPlayer { get; set; }
         private AIPlayer AIPlayer { get; set; }
         private Player CurrentPlayer { get; set; }
-        
+
+        private int miniMaxCalls;
         //--------------------------------------- Methods ----------------------------------------------------------
         private void Awake()
         {
@@ -69,9 +71,9 @@ namespace Managers
                 CurrentPlayer.Update();
                 CurrentPlayer = CurrentPlayer == AIPlayer ? HumanPlayer : AIPlayer;
                 CurrentPlayer.IsMyTurn = true;
-                if (CurrentPlayer == HumanPlayer) HumanPlayer.EnablePieces();
+                if (CurrentPlayer == HumanPlayer) CurrentPlayer.EnablePieces();
                 
-                movementManager.GenerateAllMoves(movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces, AIPlayer.Pieces);
+                movementManager.GenerateAllMoves(LastTurn, CurrentPlayer, movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces, AIPlayer.Pieces);
                 movementManager.EvaluateKingStatus(tileManager.Tiles,
                     (King)CurrentPlayer.Pieces.First(p => p.type == ChessPieceType.King));
                 movementManager.EliminateInvalidMoves(movementManager.ChessPieces, tileManager.Tiles,
@@ -79,7 +81,32 @@ namespace Managers
                 GameStatus = EvaluateGameStatus(CurrentPlayer.Team);
 
                 if (CurrentPlayer == AIPlayer)
+                {
+                    /*var allMovablePieces = CurrentPlayer.Pieces.FindAll(p => p.Moves.Count != 0).ToList();
+                    if (allMovablePieces.Count != 0)
+                    {
+                        var chessPieceToMove = allMovablePieces.First();
+                        var moveToMake = chessPieceToMove.Moves.First();
+                        var moveToTile = tileManager.Tiles[moveToMake.Coords.x, moveToMake.Coords.y];
+            
+                        moveToTile.IsAvailableTile = moveToMake.Type is Shared.MoveType.Normal or Shared.MoveType.Promotion or Shared.MoveType.LongCastle
+                            or Shared.MoveType.ShortCastle;
+                        moveToTile.IsAttackTile = moveToMake.Type is Shared.MoveType.Attack or Shared.MoveType.AttackPromotion
+                            or Shared.MoveType.EnPassant;
+                        moveToTile.IsSpecialTile = moveToMake.Type is Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion
+                            or Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle or Shared.MoveType.EnPassant;
+            
+                        var turn = movementManager.MakeMove(movementManager.ChessPieces, chessPieceToMove, moveToTile, false);
+
+                        moveToTile.IsAvailableTile = false;
+                        moveToTile.IsAttackTile = false;
+                        moveToTile.IsSpecialTile = false;
+                    
+                        AIPlayer.HasMoved = true;
+                        AdvanceTurn(turn);   
+                    }*/
                     StartCoroutine(AITurn());
+                }
             }
 
             if (GameStatus is not (Shared.GameStatus.Victory or Shared.GameStatus.Defeat or Shared.GameStatus.Draw))
@@ -113,8 +140,9 @@ namespace Managers
                 CurrentPlayer = AIPlayer;
                 HumanPlayer.DisablePieces();
             }
-            
-            movementManager.GenerateAllMoves(movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces, AIPlayer.Pieces);
+
+            movementManager.GenerateAllMoves(null, CurrentPlayer, movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces,
+                AIPlayer.Pieces);
             movementManager.EliminateInvalidMoves(movementManager.ChessPieces, tileManager.Tiles, CurrentPlayer.Team);
             
             AIPlayer.DisablePieces();
@@ -141,7 +169,6 @@ namespace Managers
                 Destroy(teamSelector);
             }
         }
-
         public void AdvanceTurn(Turn currentTurn)
         {
             DisableEnPassantTargetOnLastTurnPiece();
@@ -151,7 +178,6 @@ namespace Managers
             
             tileManager.UpdateTileMaterialAfterMove(LastTurn.PiecesMovedInThisTurn.Pieces[^1]);
         }
-
         private Shared.GameStatus EvaluateGameStatus(Shared.TeamType evaluatedTeam)
         {
             var currentKing = (King)(evaluatedTeam == Shared.TeamType.White ? movementManager.WhiteKing : movementManager.BlackKing);
@@ -175,34 +201,36 @@ namespace Managers
 
             return Shared.GameStatus.Continue;
         }
-
-        private IEnumerator AITurn() 
+        private IEnumerator AITurn()
         {
-            const int depthSearch = 3;
+            miniMaxCalls = 0;
+            const int depthSearch = 2;
             // Calculate best move for bot
             ChessPiece chessPieceToMove = null;
             var moveToMake = new Move();
             var bestScore = int.MinValue;
             int alpha = int.MinValue;
             int beta = int.MaxValue;
-
-            var moveDict = CopyAllMoves(AIPlayer.Pieces);
+            
+            var startTime = Time.realtimeSinceStartup;
             foreach (var piece in AIPlayer.Pieces)
             {
-                var copyPieceMoves = moveDict[piece];
-                foreach (var move in copyPieceMoves)
+                foreach (var move in piece.Moves)
                 {
                     yield return null;
-                    var simulatedTurn = movementManager.MakeMove(movementManager.ChessPieces, piece, tileManager.GetTile( move.Coords), true);
+                    var simulatedTile = tileManager.Tiles[move.Coords.x, move.Coords.y];
+                    
+                    simulatedTile.DetermineTileTypeFromMove(move);
+                    var simulatedTurn = movementManager.MakeMove(movementManager.ChessPieces, piece, simulatedTile, true);
 
                     // We make a deep copy of the board to not re-calculate the moves for each simulation
                     // Each MiniMax instance will have its own board to play around with
-                    var score = MiniMax(chessboard.DeepCopyBoard(movementManager.ChessPieces),
-                        chessboard.DeepCopyTiles(), depthSearch - 1, HumanPlayer, false, alpha, beta);
-                    
-                    
+                    var score = MiniMax(simulatedTurn, chessboard.DeepCopyBoard(movementManager.ChessPieces),
+                        chessboard.DeepCopyTiles(tileManager.Tiles), depthSearch - 1, HumanPlayer, false, -alpha, -beta);
+
                     movementManager.UndoMove(movementManager.ChessPieces, simulatedTurn.PiecesMovedInThisTurn, true);
-                    
+                    simulatedTile.ResetTileType();
+
                     if (score <= bestScore) continue;
                     
                     chessPieceToMove = piece;
@@ -215,23 +243,32 @@ namespace Managers
                         break;
                 }
             }
+            Debug.Log("AI Minimax took: " + (Time.realtimeSinceStartup - startTime));
 
-            var turn = movementManager.MakeMove(movementManager.ChessPieces, chessPieceToMove,
-                tileManager.Tiles[moveToMake.Coords.x, moveToMake.Coords.y], false);
+            
+            var moveToTile = tileManager.Tiles[moveToMake.Coords.x, moveToMake.Coords.y];
+            
+            moveToTile.DetermineTileTypeFromMove(moveToMake);
+            var turn = movementManager.MakeMove(movementManager.ChessPieces, chessPieceToMove, moveToTile, false);
+            moveToTile.ResetTileType();
+
             AIPlayer.HasMoved = true;
             AdvanceTurn(turn);
+            
+            Debug.Log(miniMaxCalls);
         }
-
         private static Dictionary<ChessPiece, List<Move>> CopyAllMoves(List<ChessPiece> pieces)
         {
             return pieces.ToDictionary(playerPiece => playerPiece, playerPiece => Move.DeepCopy(playerPiece.Moves));
         }
-
-        private int MiniMax(ChessPiece[,] board, Tile[,] tiles, int depth, Player player, bool maximizing, int alpha, int beta)
+        private int MiniMax(Turn previousTurn, ChessPiece[,] board, Tile[,] tiles, int depth, Player player, bool maximizing, int alpha, int beta)
         {
+            //var startTime = Time.realtimeSinceStartup;
+            miniMaxCalls++;
             if (depth == 0 || EvaluateGameStatus(player.Team) is Shared.GameStatus.Defeat or Shared.GameStatus.Victory
                     or Shared.GameStatus.Draw)
             {
+                //Debug.Log("Duration of minimax " + miniMaxCalls + " is: " + (Time.realtimeSinceStartup - startTime));
                 var score = EvaluateBoardScore(board, player);
                 CleanUpSearchBoard(board, tiles);
                 return score;
@@ -242,7 +279,7 @@ namespace Managers
             var chessBoard = movementManager.GetChessPieceListFromArray(board);
             var whitePieces = chessBoard.FindAll(cp => cp.team == Shared.TeamType.White).ToList();
             var blackPieces = chessBoard.FindAll(cp => cp.team == Shared.TeamType.Black).ToList();
-            RegenerateMovesForPlayer(board, tiles, whitePieces, blackPieces, player);
+            RegenerateMovesForPlayer(previousTurn, board, tiles, whitePieces, blackPieces, player);
 
             // Calculate each piece moves
             var playerPieces = player.Team == Shared.TeamType.White ? whitePieces : blackPieces;
@@ -258,14 +295,18 @@ namespace Managers
                     foreach (var move in copyPieceMoves)
                     {
                         // Make Move
+                        var moveToTile = tiles[move.Coords.x, move.Coords.y];
+                        
+                        moveToTile.DetermineTileTypeFromMove(move);
                         var simulatedTurn =
-                            movementManager.MakeMove(board, piece, tiles[move.Coords.x, move.Coords.y], true);
+                            movementManager.MakeMove(board, piece, moveToTile, true);
 
-                        var score = MiniMax(chessboard.DeepCopyBoard(board), chessboard.DeepCopyTiles(), depth - 1,
-                            HumanPlayer, false, alpha, beta);
+                        var score = MiniMax(simulatedTurn, chessboard.DeepCopyBoard(board),
+                            chessboard.DeepCopyTiles(tiles), depth - 1, HumanPlayer, false, -alpha, -beta);
 
                         movementManager.UndoMove(board, simulatedTurn.PiecesMovedInThisTurn, true);
-                        
+                        moveToTile.ResetTileType();
+
                         bestEval = Math.Max(bestEval, score);
                         alpha = Math.Max(alpha, bestEval);
 
@@ -282,16 +323,21 @@ namespace Managers
                     var copyPieceMoves = moveDict[piece];
                     foreach (var move in copyPieceMoves)
                     {
+                        var moveToTile = tiles[move.Coords.x, move.Coords.y];
+
                         // Simulate move
+                        moveToTile.DetermineTileTypeFromMove(move);
                         var simulatedTurn =
                             movementManager.MakeMove(board, piece, tiles[move.Coords.x, move.Coords.y], true);
                         
                         // Calculate score
-                        var score = MiniMax(chessboard.DeepCopyBoard(board), chessboard.DeepCopyTiles(), depth - 1,
-                            AIPlayer, true, alpha, beta);
+                        var score = MiniMax(simulatedTurn, chessboard.DeepCopyBoard(board), chessboard.DeepCopyTiles(tiles),
+                            depth - 1,
+                            AIPlayer, true, -alpha, -beta);
                         
                         // Undo simulated movement
                         movementManager.UndoMove(board, simulatedTurn.PiecesMovedInThisTurn, true);
+                        moveToTile.ResetTileType();
 
                         bestEval = Math.Min(bestEval, score);
                         beta = Math.Min(beta, bestEval);
@@ -304,11 +350,12 @@ namespace Managers
             }
 
             CleanUpSearchBoard(board, tiles);
-            return bestEval;
+            //Debug.Log("Duration of minimax " + miniMaxCalls + " is: " + (Time.realtimeSinceStartup - startTime));
+            return -bestEval;
         }
-
         private int EvaluateBoardScore(ChessPiece[,] board, Player evaluatedPlayer)
         {
+            var startTime = Time.realtimeSinceStartup;
             var score = 0;
             foreach (var piece in board)
             {
@@ -317,15 +364,14 @@ namespace Managers
                 var scoreSign = piece.team == evaluatedPlayer.Team ? 1 : -1;
                 score += piece.pieceScore * scoreSign;
             }
-            
+
+            Debug.Log("Evaluate Board Score " + (Time.realtimeSinceStartup - startTime));
             return score;
         }
-        
         public void SwitchTurn()
         {
             IsWhiteTurn = !IsWhiteTurn;
         }
-
         private void DisableEnPassantTargetOnLastTurnPiece()
         {
             if (LastTurn != null && LastTurn.PiecesMovedInThisTurn.Pieces[^1].type == ChessPieceType.Pawn)
@@ -333,7 +379,6 @@ namespace Managers
                 ((Pawn)LastTurn.PiecesMovedInThisTurn.Pieces[^1]).IsEnPassantTarget = false;
             }
         }
-
         private void SetPlayer(Vector3 position)
         {
             var direction = Shared.TeamType.White == HumanPlayer.Team ? 1 : -1;
@@ -341,7 +386,6 @@ namespace Managers
                 position.z);
             xrOrigin.GetComponent<ActionBasedContinuousMoveProvider>().enabled = false;
         }
-
         public bool IsChessPieceInHistory(ChessPiece chessPiece)
         {
             foreach (var turn in History)
@@ -356,17 +400,19 @@ namespace Managers
             return false;
         }
 
-        private void RegenerateMovesForPlayer(ChessPiece[,] board, Tile[,] tiles, List<ChessPiece> whitePieces, List<ChessPiece> blackPieces, Player player)
+        private void RegenerateMovesForPlayer(Turn lastTurn, ChessPiece[,] board, Tile[,] tiles,
+            List<ChessPiece> whitePieces, List<ChessPiece> blackPieces, Player player)
         {
+            var startTime = Time.realtimeSinceStartup;
             var king = (King)(player.Team == Shared.TeamType.White
                 ? whitePieces.First(cp => cp.type == ChessPieceType.King)
                 : blackPieces.First(cp => cp.type == ChessPieceType.King));
             
-            movementManager.GenerateAllMoves(board, tiles, whitePieces, blackPieces);
+            movementManager.GenerateAllMoves(lastTurn, player, board, tiles, whitePieces, blackPieces);
             movementManager.EvaluateKingStatus(tiles, king);
             movementManager.EliminateInvalidMoves(board, tiles, player.Team);
+            Debug.Log("Regenerate moves time " + (Time.realtimeSinceStartup - startTime));
         }
-
         private static void CleanUpSearchBoard(ChessPiece[,] board, Tile[,] tiles)
         {
             DestroyBoard(board);
@@ -379,6 +425,7 @@ namespace Managers
                 if(chessPiece == null) continue;
                 
                 Destroy(chessPiece.gameObject);
+                break;
             }
         }
         private static void DestroyTileSet(Tile[,] tilesToDestroy)

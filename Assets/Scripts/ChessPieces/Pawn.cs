@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ChessLogic;
 using Managers;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ChessPieces
 
         public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
         {
+            protectsKing = false;
             Moves = new List<Move>();
             var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
             var isPromotion = isMoved && (currentX is 1 or 6);
@@ -39,7 +41,6 @@ namespace ChessPieces
             var leftOccupationStatus = MovementManager.CalculateSpaceOccupation(board, attackMoveLeft, team);
             if (leftOccupationStatus != Shared.TileOccupiedBy.EndOfTable)
             {
-                AddToTileAttackingPieces(tiles, attackMoveLeft);
                 if (leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece)
                     Moves.Add(new Move(attackMoveLeft,
                         isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
@@ -49,13 +50,31 @@ namespace ChessPieces
             var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(board, attackMoveRight, team);
             if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
             {
-                AddToTileAttackingPieces(tiles, attackMoveRight);
                 if (rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece)
                     Moves.Add(new Move(attackMoveRight,
                         isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
             }
 
             Moves.AddRange(CalculateSpecialMoves(board, tiles));
+        }
+
+        public override void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles)
+        {
+            var direction = Shared.TeamType.White.Equals(team) ? 1 : -1;
+            Vector2Int attackMoveLeft = new(currentX + (direction * 1), currentY + 1);
+            Vector2Int attackMoveRight = new(currentX + (direction * 1), currentY - 1);
+
+            var leftOccupationSpace = MovementManager.CalculateSpaceOccupation(board, attackMoveLeft, team);
+            if (leftOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
+                AddToTileAttackingPieces(tiles, attackMoveLeft);
+            
+            var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(board, attackMoveRight, team);
+            if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
+                AddToTileAttackingPieces(tiles, attackMoveRight);
+
+            var specialMoves = Moves.FindAll(m => m.Type == Shared.MoveType.EnPassant).ToList();
+            foreach (var specialMove in specialMoves)
+                AddToTileAttackingPieces(tiles, specialMove.Coords);
         }
 
         private List<Move> CalculateSpecialMoves(ChessPiece[,] board, Tile[,] tiles)
@@ -86,8 +105,6 @@ namespace ChessPieces
                 
                 var specialMove = new Move(possibleEnPassantAttack[i], Shared.MoveType.EnPassant);
                 moves.Add(specialMove);
-
-                AddToTileAttackingPieces(tiles, specialMove.Coords);
             }
             
             return moves;

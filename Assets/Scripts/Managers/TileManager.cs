@@ -71,12 +71,7 @@ namespace Managers
         
         public Tile GetTile(Vector2Int tileCoord)
         {
-            return GetTile(tileCoord.x, tileCoord.y);
-        }
-
-        public Tile GetTile(int x, int y)
-        {
-            return TilesGameObjects[x, y].GetComponent<Tile>();
+            return Tiles[tileCoord.x, tileCoord.y];
         }
     }
 }

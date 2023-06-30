@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ChessLogic;
 using Managers;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace ChessPieces
 
         public override void CalculateAvailablePositions(ChessPiece[,] board, Tile[,] tiles)
         {
+            protectsKing = false;
             Moves = new List<Move>();
 
             Vector2Int kingForwardMove = new(currentX, currentY + 1);
@@ -44,7 +46,6 @@ namespace ChessPieces
             possibleMoves.ForEach(move =>
             {
                 var occupationType = MovementManager.CalculateSpaceOccupation(board, move, team);
-                if (occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(tiles, move);
 
                 switch (occupationType)
                 {
@@ -58,25 +59,25 @@ namespace ChessPieces
             });
 
             if (isMoved) return;
-            try
-            {
 
-                Vector2Int castleShort = new(currentX, currentY - 2);
-                var castleShortRook = board[castleShort.x, castleShort.y - 1];
-                if (castleShortRook != null && castleShortRook is Rook shortRook && !shortRook.IsMoved)
-                    Moves.Add(new Move(castleShort, Shared.MoveType.ShortCastle));
+            Vector2Int castleShort = new(currentX, currentY - 2); 
+            var castleShortRook = board[castleShort.x, castleShort.y - 1];
+            if (castleShortRook != null && castleShortRook is Rook shortRook && !shortRook.IsMoved)
+                Moves.Add(new Move(castleShort, Shared.MoveType.ShortCastle));
 
-                Vector2Int castleLong = new(currentX, currentY + 2);
-                var castleLongRook = board[castleLong.x, castleLong.y + 2];
-                if (castleLongRook != null && castleLongRook is Rook longRook && !longRook.IsMoved)
-                    Moves.Add(new Move(castleLong, Shared.MoveType.LongCastle));
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            Vector2Int castleLong = new(currentX, currentY + 2);
+            var castleLongRook = board[castleLong.x, castleLong.y + 2];
+            if (castleLongRook != null && castleLongRook is Rook longRook && !longRook.IsMoved)
+                Moves.Add(new Move(castleLong, Shared.MoveType.LongCastle));
+
         }
 
+        public override void MarkAttackedTiles(ChessPiece[,] board, Tile[,] tiles)
+        {
+            foreach (var move in Moves
+                         .FindAll(m => m.Type != Shared.MoveType.ShortCastle && m.Type != Shared.MoveType.LongCastle)
+                         .ToList())
+                AddToTileAttackingPieces(tiles, move.Coords);
+        }
     }
 }
