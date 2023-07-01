@@ -82,6 +82,15 @@ namespace Managers
 
                 if (CurrentPlayer == AIPlayer)
                 {
+                    try
+                    {
+                        UnmarkAIMove(History[^2]);
+                    }
+                    catch (Exception e)
+                    {
+                        // ignored
+                    }
+
                     /*var allMovablePieces = CurrentPlayer.Pieces.FindAll(p => p.Moves.Count != 0).ToList();
                     if (allMovablePieces.Count != 0)
                     {
@@ -212,8 +221,8 @@ namespace Managers
             ChessPiece chessPieceToMove = null;
             var moveToMake = new Move();
             var bestScore = int.MinValue;
-            int alpha = int.MinValue;
-            int beta = int.MaxValue;
+            var alpha = int.MinValue;
+            var beta = int.MaxValue;
              
             var startTime = Time.realtimeSinceStartup;
             foreach (var piece in AIPlayer.Pieces)
@@ -229,13 +238,15 @@ namespace Managers
                     // We make a deep copy of the board to not re-calculate the moves for each simulation
                     // Each MiniMax instance will have its own board to play around with
                     var boardCopy = chessboard.DeepCopyBoard(movementManager.ChessPieces);
+
                     var score = MiniMax(simulatedTurn, boardCopy,
                         chessboard.DeepCopyTiles(tileManager.Tiles, boardCopy), depthSearch - 1, HumanPlayer, false,
-                        -alpha, -beta);
+                        alpha, beta);
 
-                    movementManager.UndoMove(movementManager.ChessPieces, simulatedTurn.PiecesMovedInThisTurn, true);
+                    movementManager.UndoMove(movementManager.ChessPieces, simulatedTurn, true);
+
                     simulatedTile.ResetTileType();
-
+                    
                     if (score <= bestScore) continue;
                     
                     chessPieceToMove = piece;
@@ -243,7 +254,6 @@ namespace Managers
                     bestScore = score;
                     
                     alpha = Math.Max(alpha, bestScore);
-                    
                     if (alpha >= beta)
                         break;
                 }
@@ -259,8 +269,29 @@ namespace Managers
 
             AIPlayer.HasMoved = true;
             AdvanceTurn(turn);
-            
+            MarkAIMove(turn);
             Debug.Log(miniMaxCalls);
+        }
+
+        private void MarkAIMove(Turn turn)
+        {
+            var positionChange = turn.PiecesMovedInThisTurn.PositionChanges[^1];
+            tileManager.UpdateTileMaterial(positionChange.Item1, Shared.TileType.Selected);
+
+            var isTurnAttack = turn.MoveType is Shared.MoveType.Attack or Shared.MoveType.AttackPromotion
+                or Shared.MoveType.EnPassant;
+            var isTileWhite = tileManager.Tiles[positionChange.Item2.x, positionChange.Item2.y];
+            tileManager.UpdateTileMaterial(positionChange.Item2,
+                isTurnAttack 
+                    ? isTileWhite ? Shared.TileType.AttackTileWhite : Shared.TileType.AttackTileBlack 
+                    : isTileWhite ? Shared.TileType.AvailableWhite : Shared.TileType.AvailableBlack);
+        }
+
+        private void UnmarkAIMove(Turn turn)
+        {
+            var positionChange = turn.PiecesMovedInThisTurn.PositionChanges[^1];
+            tileManager.UpdateTileMaterial(positionChange.Item1, Shared.TileType.Default);
+            tileManager.UpdateTileMaterial(positionChange.Item2, Shared.TileType.Default);
         }
         
         private static Dictionary<ChessPiece, List<Move>> CopyAllMoves(List<ChessPiece> pieces)
@@ -272,17 +303,16 @@ namespace Managers
         {
             //var startTime = Time.realtimeSinceStartup;
             miniMaxCalls++;
-            if (depth == 0 || EvaluateGameStatus(player.Team) is Shared.GameStatus.Defeat or Shared.GameStatus.Victory
+            var gameStatus = EvaluateGameStatus(player.Team);
+            if (depth == 0 || gameStatus is Shared.GameStatus.Defeat or Shared.GameStatus.Victory
                     or Shared.GameStatus.Draw)
             {
-                //Debug.Log("Duration of minimax " + miniMaxCalls + " is: " + (Time.realtimeSinceStartup - startTime));
                 var score = EvaluateBoardScore(board, player);
                 CleanUpSearchBoard(board, tiles);
                 return score;
             }
             
             // Correctly break the copied board into white and black chessPieces
-            
             var chessBoard = movementManager.GetChessPieceListFromArray(board);
             var whitePieces = chessBoard.FindAll(cp => cp.team == Shared.TeamType.White).ToList();
             var blackPieces = chessBoard.FindAll(cp => cp.team == Shared.TeamType.Black).ToList();
@@ -291,7 +321,6 @@ namespace Managers
             // Calculate each piece moves
             var playerPieces = player.Team == Shared.TeamType.White ? whitePieces : blackPieces;
             var moveDict = CopyAllMoves(playerPieces);
-            
             int bestEval;
             if (maximizing)
             {
@@ -309,17 +338,17 @@ namespace Managers
                             movementManager.MakeMove(board, piece, moveToTile, true);
 
                         var boardCopy = chessboard.DeepCopyBoard(board);
-                        var score = MiniMax(simulatedTurn, boardCopy,
-                            chessboard.DeepCopyTiles(tiles, boardCopy), depth - 1, HumanPlayer, false, -alpha, -beta);
-
-                        movementManager.UndoMove(board, simulatedTurn.PiecesMovedInThisTurn, true);
+                        bestEval =
+                            Math.Max(bestEval,
+                                MiniMax(simulatedTurn, boardCopy, chessboard.DeepCopyTiles(tiles, boardCopy), depth - 1,
+                                    HumanPlayer, false, alpha, beta));
+                        
+                        movementManager.UndoMove(board, simulatedTurn, true);
                         moveToTile.ResetTileType();
-
-                        bestEval = Math.Max(bestEval, score);
+                        
                         alpha = Math.Max(alpha, bestEval);
-
-                        if (alpha >= beta)
-                            break;
+                        if (bestEval >= beta)
+                            return alpha;
                     }
                 }
             }
@@ -340,19 +369,17 @@ namespace Managers
                         
                         // Calculate score
                         var boardCopy = chessboard.DeepCopyBoard(board);
-                        var score = MiniMax(simulatedTurn, boardCopy, chessboard.DeepCopyTiles(tiles, boardCopy),
-                            depth - 1,
-                            AIPlayer, true, -alpha, -beta);
+                        bestEval = Math.Min(bestEval,
+                            MiniMax(simulatedTurn, boardCopy, chessboard.DeepCopyTiles(tiles, boardCopy), depth - 1,
+                                AIPlayer, true, alpha, beta));
                         
                         // Undo simulated movement
-                        movementManager.UndoMove(board, simulatedTurn.PiecesMovedInThisTurn, true);
+                        movementManager.UndoMove(board, simulatedTurn, true);
                         moveToTile.ResetTileType();
 
-                        bestEval = Math.Min(bestEval, score);
                         beta = Math.Min(beta, bestEval);
-
-                        if (alpha >= beta)
-                            break;
+                        if (bestEval <= alpha)
+                            return beta;
                     }
                 }
                 
@@ -360,7 +387,7 @@ namespace Managers
 
             CleanUpSearchBoard(board, tiles);
             //Debug.Log("Duration of minimax " + miniMaxCalls + " is: " + (Time.realtimeSinceStartup - startTime));
-            return -bestEval;
+            return bestEval;
         }
         
         private int EvaluateBoardScore(ChessPiece[,] board, Player evaluatedPlayer)

@@ -106,10 +106,11 @@ namespace Managers
             GameManager.AdvanceTurn(turn);
         }
 
-        public Turn MakeMove(ChessPiece[,] board, ChessPiece chessPiece, Tile newTile, bool isSimulation)
+        public Turn MakeMove(ChessPiece[,] board, ChessPiece movedChessPiece, Tile newTile, bool isSimulation)
         {
             if (newTile == null) return null;
-            
+
+            var chessPiece = movedChessPiece;
             var movedPieces = new MovedPieces();
             var turn = 
                 new Turn(movedPieces, Shared.MoveType.Normal, 
@@ -122,6 +123,7 @@ namespace Managers
 
             if (newTile.IsAttackTile && !newTile.IsSpecialTile)
             {
+                turn.MoveType = Shared.MoveType.Attack;
                 var enemyPiece = board[newPosition.x, newPosition.y];
                 movedPieces.AddNewPieceAndPosition(enemyPiece, MovedPieces.EliminationPosition);
                 EliminatePiece(board, enemyPiece, isSimulation);
@@ -182,16 +184,49 @@ namespace Managers
                         EliminatePiece(board, promotionEnemyPiece, isSimulation);
                         turn.MoveType = Shared.MoveType.AttackPromotion;
                         
-                        chessPiece.MyPlayer.HasMoved = false;
-                        chessPiece.MyPlayer.DisablePieces();
-                        promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        if(!isSimulation)
+                        {
+                            chessPiece.MyPlayer.DisablePieces();
+                            chessPiece.MyPlayer.HasMoved = false;
+                            promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        }
+                        else 
+                        {
+                            var newPiece = chessPiece.gameObject.AddComponent<Queen>();
+                            newPiece.pieceScore = chessPiece.pieceScore;
+                            newPiece.currentX = chessPiece.currentX;
+                            newPiece.currentY = chessPiece.currentY;
+                            newPiece.team = chessPiece.team;
+                            newPiece.type = chessPiece.type;
+                            newPiece.IsMoved = true;
+                            newPiece.MovementManager = chessPiece.MovementManager;
+                            newPiece.Moves = new List<Move>();
+                            
+                            chessPiece = newPiece;
+                        }
                         break;
                     case Shared.MoveType.Promotion:
-                        chessPiece.MyPlayer.HasMoved = false;
-                        
                         turn.MoveType = Shared.MoveType.Promotion;
-                        chessPiece.MyPlayer.DisablePieces();
-                        promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        if (!isSimulation)
+                        {
+                            chessPiece.MyPlayer.DisablePieces();
+                            chessPiece.MyPlayer.HasMoved = false;
+                            promotionHandler.EnableDisablePromotionCanvas(true, chessPiece);
+                        }
+                        else
+                        {
+                            var newPiece = chessPiece.gameObject.AddComponent<Queen>();
+                            newPiece.pieceScore = chessPiece.pieceScore;
+                            newPiece.currentX = chessPiece.currentX;
+                            newPiece.currentY = chessPiece.currentY;
+                            newPiece.team = chessPiece.team;
+                            newPiece.type = chessPiece.type;
+                            newPiece.IsMoved = true;
+                            newPiece.MovementManager = chessPiece.MovementManager;
+                            newPiece.Moves = new List<Move>();
+
+                            chessPiece = newPiece;
+                        }
                         break;
                 }
             }
@@ -258,11 +293,19 @@ namespace Managers
             enemyPiece.GetComponent<XRGrabInteractable>().enabled = false;
         }
         
-        public void UndoMove(ChessPiece[,] board, MovedPieces movesToUndo, bool isSimulation)
+        public void UndoMove(ChessPiece[,] board, Turn turnToUndo, bool isSimulation)
         {
+            var movesToUndo = turnToUndo.PiecesMovedInThisTurn;
+
             for (var i = movesToUndo.PositionChanges.Count - 1; i >= 0; i--)
             {
                 var chessPieceToUndo = movesToUndo.Pieces[i];
+                if (i == 0 && turnToUndo.MoveType is Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion)
+                {
+                    chessPieceToUndo = chessPieceToUndo.gameObject.GetComponent<Pawn>();
+                    Destroy(chessPieceToUndo.gameObject.GetComponent<Queen>());
+                }
+
                 var (oldPosition, currentPosition) = movesToUndo.PositionChanges[i];
 
                 if (currentPosition == MovedPieces.EliminationPosition)
@@ -577,7 +620,7 @@ namespace Managers
 
                         if (markMoveForExclusion) movesToBeRemoved.Add(move);
 
-                        UndoMove(board, simulatedTurn.PiecesMovedInThisTurn, true);
+                        UndoMove(board, simulatedTurn, true);
                         tile.IsSpecialTile = false;
                         tile.IsAttackTile = false;
                         tile.IsAvailableTile = false;
