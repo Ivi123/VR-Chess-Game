@@ -103,11 +103,10 @@ namespace ChessLogic
                 var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
 
                 if (occupationType is TileOccupiedBy.EndOfTable) break;
-                if (occupationType is TileOccupiedBy.FriendlyPiece)
-                {
-                    possibleMoves.Add(new Move(possibleMove, MoveType.Normal)); 
-                    break;
-                }
+                
+                chessPiece.AddToTileAttackingPieces(tiles, possibleMove);
+                
+                if (occupationType is TileOccupiedBy.FriendlyPiece) break;
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
                     possibleMoves.Add(new Move(possibleMove, MoveType.Attack));

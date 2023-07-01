@@ -427,16 +427,10 @@ namespace Managers
                 tile.ResetAttackStatus();
 
             foreach (var chessPiece in whiteTeam)
-            {
                 chessPiece.CalculateAvailablePositions(board, tiles);
-                chessPiece.MarkAttackedTiles(board, tiles);
-            }
 
             foreach (var chessPiece in blackTeam)
-            {
                 chessPiece.CalculateAvailablePositions(board, tiles);
-                chessPiece.MarkAttackedTiles(board, tiles);
-            }
 
             foreach (var tile in tiles)
                 tile.DetermineAttackStatus();

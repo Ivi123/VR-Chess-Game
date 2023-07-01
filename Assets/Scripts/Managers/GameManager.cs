@@ -130,13 +130,13 @@ namespace Managers
             
             GameStatus = Shared.GameStatus.Continue;
 
+            CurrentPlayer = HumanPlayer;
             if (HumanPlayer.Team == Shared.TeamType.White)
             {
                 HumanPlayer.Pieces = movementManager.WhitePieces.Select(piece => piece.GetComponent<ChessPiece>())
                     .ToList();
                 AIPlayer.Pieces = movementManager.BlackPieces.Select(piece => piece.GetComponent<ChessPiece>())
                     .ToList();
-                CurrentPlayer = HumanPlayer;
                 HumanPlayer.EnablePieces();
             }
             else
@@ -145,37 +145,35 @@ namespace Managers
                     .ToList();
                 AIPlayer.Pieces = movementManager.WhitePieces.Select(piece => piece.GetComponent<ChessPiece>())
                     .ToList();
-                CurrentPlayer = AIPlayer;
                 HumanPlayer.DisablePieces();
+                HumanPlayer.HasMoved = true;
             }
-
-            movementManager.GenerateAllMoves(null, CurrentPlayer, movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces,
-                AIPlayer.Pieces);
-            movementManager.EliminateInvalidMoves(movementManager.ChessPieces, tileManager.Tiles, CurrentPlayer.Team);
-            
+    
             AIPlayer.DisablePieces();
             CurrentPlayer.IsMyTurn = true;
             
             HumanPlayer.InitPieces();
             AIPlayer.InitPieces();
 
+            /*
             if (!AIPlayer.IsMyTurn) return;
             StartCoroutine(AITurn());
-            CurrentPlayer.HasMoved = true;
+            CurrentPlayer.HasMoved = true;*/
         }
 
         public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition, Shared.ChessboardConfig chessboardConfig)
         {
             HumanPlayer.Team = selectedTeam;
-            AIPlayer.Team = HumanPlayer.Team == Shared.TeamType.White ? Shared.TeamType.Black : Shared.TeamType.White;
+            AIPlayer.Team = 
+                HumanPlayer.Team == Shared.TeamType.White 
+                    ? Shared.TeamType.Black 
+                    : Shared.TeamType.White;
 
             StartGame(chessboardConfig);
             SetPlayer(selectorPosition);
 
             foreach (var teamSelector in teamSelectors)
-            {
                 Destroy(teamSelector);
-            }
         }
 
         public void AdvanceTurn(Turn currentTurn)
@@ -394,8 +392,8 @@ namespace Managers
 
             return score;
         }
-        
-        public void SwitchTurn()
+
+        private void SwitchTurn()
         {
             IsWhiteTurn = !IsWhiteTurn;
         }
