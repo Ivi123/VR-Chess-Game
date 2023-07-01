@@ -977,7 +977,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1302192663}
         m_TargetAssemblyTypeName: TeamSelector, Assembly-CSharp
-        m_MethodName: SelectTeamForProm
+        m_MethodName: SelectTeamForLongCastle
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

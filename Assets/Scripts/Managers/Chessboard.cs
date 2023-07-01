@@ -61,6 +61,9 @@ namespace Managers
                 case Shared.ChessboardConfig.Promotion:
                     SpawnAllPiecesForProm();
                     break;
+                case Shared.ChessboardConfig.LongCastle:
+                    SpawnAllPiecesForLongCastle();
+                    break;
             }
 
             PositionAllPieces();
@@ -198,6 +201,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
 
+        // Merge dar trebuie reasezate piesele
         public void SpawnPiecesForVictory()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -245,6 +249,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
     
+        // Merge ):| (Muichiro) - ar trebui sa intoarcem pozitia jucatorului cu 180 de grade ca sa vada la masa din prima
         public void SpawnPiecesForDefeat()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -280,6 +285,7 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
         
+        // Mergeee :> (Mitsuri)
         public void SpawnPiecesForDraw()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -288,25 +294,44 @@ namespace Managers
             // white team
             chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
             MovementManager.SetKing(chessPieces[0, 3]);
+            
             chessPieces[0, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             chessPieces[2, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[2, 2].IsMoved = true;
+
             chessPieces[2, 5] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[2, 5].IsMoved = true;
+
             chessPieces[2, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[2, 6].IsMoved = true;
+
             chessPieces[3, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[3, 1].IsMoved = true;
+
             chessPieces[3, 3] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.White);
+            chessPieces[3, 3].IsMoved = true;
+
             chessPieces[4, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[4, 5].IsMoved = true;
+
             chessPieces[5, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[5, 6].IsMoved = true;
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
-            ((King)chessPieces[7, 0]).IsMoved = true;
+            chessPieces[7, 0].IsMoved = true;
             MovementManager.SetKing(chessPieces[7, 0]);
+            
             chessPieces[6, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[6, 6].IsMoved = true;
+
             chessPieces[5, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[5, 5].IsMoved = true;
 
             MovementManager.ChessPieces = chessPieces;
         }
         
+        // Merge :::D (Kokushibo)
         private void SpawnAllPiecesForProm()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -315,22 +340,36 @@ namespace Managers
             // white team
             chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
             MovementManager.SetKing(chessPieces[0, 3]);
+            
             chessPieces[2, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[2, 2].IsMoved = true;
+
             chessPieces[2, 5] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[2, 5].IsMoved = true;
+
             chessPieces[2, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[2, 6].IsMoved = true;
+
             chessPieces[3, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[3, 1].IsMoved = true;
+
             chessPieces[3, 3] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.White);
+            chessPieces[3, 3].IsMoved = true;
+
             chessPieces[6, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[6, 6].IsMoved = true;
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
-            ((King)chessPieces[7, 0]).IsMoved = true;
+            chessPieces[7, 0].IsMoved = true;
             MovementManager.SetKing(chessPieces[7, 0]);
             chessPieces[5, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[5, 5].IsMoved = true;
 
             MovementManager.ChessPieces = chessPieces;
         }
         
+        // Merge. 
         private void SpawnAllPiecesForLongCastle()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
