@@ -31,21 +31,13 @@ public class MovedPieces
         Pieces = new List<ChessPiece>();
         PositionChanges = new List<Tuple<Vector2Int, Vector2Int>>();
     }
-    
+
     public void AddNewPieceAndPosition(ChessPiece piece, Vector2Int newPosition)
     {
-        try
-        {
-            var oldPosition = new Vector2Int(piece.currentX, piece.currentY);
-            var positionChange = new Tuple<Vector2Int, Vector2Int>(oldPosition, newPosition);
+        var oldPosition = new Vector2Int(piece.currentX, piece.currentY);
+        var positionChange = new Tuple<Vector2Int, Vector2Int>(oldPosition, newPosition);
 
-            Pieces.Add(piece);
-            PositionChanges.Add(positionChange);
-        }
-        catch (NullReferenceException e)
-        {
-            var a = 1;
-            Console.WriteLine(e);       
-        }
+        Pieces.Add(piece);
+        PositionChanges.Add(positionChange);
     }
 }

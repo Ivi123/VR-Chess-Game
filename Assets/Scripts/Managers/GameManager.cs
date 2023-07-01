@@ -39,7 +39,6 @@ namespace Managers
         private AIPlayer AIPlayer { get; set; }
         private Player CurrentPlayer { get; set; }
 
-        private int miniMaxCalls;
         //--------------------------------------- Methods ----------------------------------------------------------
         private void Awake()
         {
@@ -86,7 +85,7 @@ namespace Managers
                     {
                         UnmarkAIMove(History[^2]);
                     }
-                    catch (Exception e)
+                    catch
                     {
                         // ignored
                     }
@@ -215,7 +214,6 @@ namespace Managers
         
         private IEnumerator AITurn()
         {
-            miniMaxCalls = 0;
             const int depthSearch = 2;
             // Calculate best move for bot
             ChessPiece chessPieceToMove = null;
@@ -224,7 +222,6 @@ namespace Managers
             var alpha = int.MinValue;
             var beta = int.MaxValue;
              
-            var startTime = Time.realtimeSinceStartup;
             foreach (var piece in AIPlayer.Pieces)
             {
                 foreach (var move in piece.Moves)
@@ -258,9 +255,7 @@ namespace Managers
                         break;
                 }
             }
-            Debug.Log("AI Minimax took: " + (Time.realtimeSinceStartup - startTime));
 
-            
             var moveToTile = tileManager.Tiles[moveToMake.Coords.x, moveToMake.Coords.y];
             
             moveToTile.DetermineTileTypeFromMove(moveToMake);
@@ -270,7 +265,6 @@ namespace Managers
             AIPlayer.HasMoved = true;
             AdvanceTurn(turn);
             MarkAIMove(turn);
-            Debug.Log(miniMaxCalls);
         }
 
         private void MarkAIMove(Turn turn)
@@ -301,8 +295,6 @@ namespace Managers
         
         private int MiniMax(Turn previousTurn, ChessPiece[,] board, Tile[,] tiles, int depth, Player player, bool maximizing, int alpha, int beta)
         {
-            //var startTime = Time.realtimeSinceStartup;
-            miniMaxCalls++;
             var gameStatus = EvaluateGameStatus(player.Team);
             if (depth == 0 || gameStatus is Shared.GameStatus.Defeat or Shared.GameStatus.Victory
                     or Shared.GameStatus.Draw)
@@ -386,13 +378,11 @@ namespace Managers
             }
 
             CleanUpSearchBoard(board, tiles);
-            //Debug.Log("Duration of minimax " + miniMaxCalls + " is: " + (Time.realtimeSinceStartup - startTime));
             return bestEval;
         }
         
         private int EvaluateBoardScore(ChessPiece[,] board, Player evaluatedPlayer)
         {
-            var startTime = Time.realtimeSinceStartup;
             var score = 0;
             foreach (var piece in board)
             {
@@ -402,7 +392,6 @@ namespace Managers
                 score += piece.pieceScore * scoreSign;
             }
 
-            Debug.Log("Evaluate Board Score " + (Time.realtimeSinceStartup - startTime));
             return score;
         }
         
@@ -444,7 +433,6 @@ namespace Managers
         private void RegenerateMovesForPlayer(Turn lastTurn, ChessPiece[,] board, Tile[,] tiles,
             List<ChessPiece> whitePieces, List<ChessPiece> blackPieces, Player player)
         {
-            var startTime = Time.realtimeSinceStartup;
             var king = (King)(player.Team == Shared.TeamType.White
                 ? whitePieces.First(cp => cp.type == ChessPieceType.King)
                 : blackPieces.First(cp => cp.type == ChessPieceType.King));
@@ -452,7 +440,6 @@ namespace Managers
             movementManager.GenerateAllMoves(lastTurn, player, board, tiles, whitePieces, blackPieces);
             movementManager.EvaluateKingStatus(tiles, king);
             movementManager.EliminateInvalidMoves(board, tiles, player.Team);
-            Debug.Log("Regenerate moves time " + (Time.realtimeSinceStartup - startTime));
         }
         
         private static void CleanUpSearchBoard(ChessPiece[,] board, Tile[,] tiles)

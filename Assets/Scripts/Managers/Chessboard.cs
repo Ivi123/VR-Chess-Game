@@ -61,8 +61,8 @@ namespace Managers
                 case Shared.ChessboardConfig.Promotion:
                     SpawnAllPiecesForProm();
                     break;
-                case Shared.ChessboardConfig.LongCastle:
-                    SpawnAllPiecesForLongCastle();
+                case Shared.ChessboardConfig.ShortCastle:
+                    SpawnAllPiecesForShortCastle();
                     break;
             }
 
@@ -201,7 +201,8 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
 
-        // Merge dar trebuie reasezate piesele
+        // Nota generala, am marcat doar piesele necesare ca fiind Moved. Restul care nu crapa sunt lasate ca fiind nemutate.
+        // poti sa incerci maine sa le schimbi
         public void SpawnPiecesForVictory()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
@@ -210,41 +211,41 @@ namespace Managers
             // white team
             chessPieces[0, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
             chessPieces[0, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
-            chessPieces[0, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             chessPieces[0, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.White);
             MovementManager.SetKing(chessPieces[0, 3]);
+            chessPieces[0, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             chessPieces[0, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
             chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
             }
-            for (int i = 5; i < TileManager.TileCountX; i++)
+            for (int i = 4; i < TileManager.TileCountX; i++)
             {
                 chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
             }
-            chessPieces[2, 4] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
-            chessPieces[4, 7] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
-            chessPieces[5, 6] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.White);
+            chessPieces[2, 3] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[4, 0] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
+            chessPieces[5, 1] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.White);
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
+            chessPieces[7, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
             chessPieces[7, 4] = SpawnSinglePiece(ChessPieceType.Queen, Shared.TeamType.Black);
             chessPieces[7, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
             MovementManager.SetKing(chessPieces[7, 3]);
             chessPieces[7, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
-            chessPieces[7, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
-            chessPieces[5, 0] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
-            chessPieces[6, 0] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[5, 0] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[6, 1] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[6, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
             chessPieces[6, 3] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[6, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[6, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[5, 2] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[5, 4] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[5, 7] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
-            chessPieces[4, 1] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[6, 4] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[4, 5] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[5, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[6, 7] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[3, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
 
             MovementManager.ChessPieces = chessPieces;
         }
@@ -369,8 +370,41 @@ namespace Managers
             MovementManager.ChessPieces = chessPieces;
         }
         
-        // Merge. 
-        private void SpawnAllPiecesForLongCastle()
+        // Merge. Peek if you dare...human
+        /*⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣤⡶⠞⠛⠋⠉⠉⠀⠀⠉⠉⠉⠉⠉⠉⠉⠉⠛⠳⢶⣤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠶⠛⠉⠀⣷⠀⠀⠀⠀⢀⣀⣀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠛⠶⠶⣦⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠈⠛⠓⠛⠋⠉⠀⠀⠀⠀⠙⢢⡀⠀⠀⠀⠀⠀⠀⣠⡤⠖⠒⠒⠀⠀⠙⠻⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡶⠟⠛⠛⠳⢤⠀⢣⠀⠀⠀⠀⠀⡴⠋⢀⣤⠴⠚⠛⠛⠦⣄⡈⢻⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⣤⠴⠊⠐⠊⠉⢀⡀⠀⠀⠀⠀⠀⢻⣦⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠃⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⡇⣠⡾⠿⣶⠶⠾⠿⣍⠙⠻⣷⣄⠀⠀⠀⠙⢿⣦⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠀⠀⢀⡴⠶⠒⠒⠀⠀⣴⠟⠀⠀⠀⠀⠀⣀⣀⣴⣶⡿⠛⠛⠋⠁⠀⠀⠀⠀⠀⠀⠙⢷⣄⠈⢿⣧⡀⠀⠀⠀⠙⢷⡄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡿⠃⠀⢠⠏⠀⠀⠀⢀⣠⠞⢡⡇⠀⢠⡇⢀⡾⣿⢿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⢷⣤⣍⣛⠷⣦⣄⠀⠀⢻⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠃⢀⡴⠃⠀⠙⠒⠒⠉⠀⣠⠎⠀⢠⣾⡇⡼⢡⡏⣾⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⣿⢻⡌⢻⣇⠀⢸⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⠇⠐⠉⠀⠀⠀⣠⡤⠒⠒⠋⠁⠀⠀⣾⡏⣿⡇⣾⠀⢻⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠻⢸⡿⠀⣼⠁⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⠀⢀⠤⠀⣀⠞⠁⠀⠀⠀⠀⠀⠀⢀⡏⣇⢹⡇⣿⠀⣀⣙⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡄⠀⡾⠃⣼⠋⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⡇⠀⣸⢟⠻⣷⣦⣄⠀⠀⠀⢀⣼⠇⢸⠸⣇⢻⡟⠓⢺⢿⣙⠒⠦⢤⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣿⡟⡠⢾⡅⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⢰⣇⠀⡟⠀⣶⢄⠈⠻⣷⡀⠀⣼⠋⠀⢸⡇⣿⣼⡇⣠⣀⣀⣈⡙⠳⠤⢿⡄⠀⠀⠀⠀⢀⣤⠖⣛⣻⠯⠿⣦⡏⣿⣅⡜⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣷⠀⢫⡳⣇⠀⡇⠘⠲⡄⢹⡇⣸⡏⠀⣠⡾⢳⡟⣿⣿⠿⣷⣿⣿⣿⣦⡀⢀⣅⠀⠀⠀⠐⠛⢋⣩⣯⣅⡀⠀⣿⡇⢸⠿⡄⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢿⡄⠀⢻⣿⡀⣿⠃⢠⡇⠘⡇⣿⠀⣼⠏⠀⣾⣿⣿⢹⠶⢼⣿⣯⠗⢛⣥⠞⠋⠀⠀⠀⢀⢼⡟⢾⣿⣷⣶⠄⣿⢠⡟⠀⢹⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⣿⡀⣼⠛⣇⠘⢦⣸⡇⠀⣷⣿⠀⢿⡄⢸⠃⣿⢻⡄⢣⡀⠀⠈⠉⠉⠀⠀⠀⠀⠀⢀⡎⠀⠙⠾⠿⠿⠋⢠⣏⡾⠁⢀⡼⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⡁⠀⠻⣄⠀⠀⢹⡆⢻⣿⠀⠀⢷⣸⡆⣧⠀⢣⠀⢹⡀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠿⠀⠀⠀⠀⠀⠀⢸⣿⢻⣤⠎⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⢷⣄⠀⠙⢷⣄⣠⡤⠘⠁⠀⢀⡿⠙⣷⣸⣠⠇⢀⠞⠀⠀⠀⠀⡀⠀⠀⣀⡀⢀⣠⡀⠀⠀⠀⠀⠀⢸⣿⠀⠹⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡽⠗⠚⣻⣿⡏⠀⠀⠀⠀⠈⠀⠀⣹⢿⣷⡐⣅⠀⠀⠀⠀⠈⠃⠔⠚⠋⣽⠽⠛⠃⠀⠀⠀⠀⢀⣯⣿⡈⢆⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⠋⣱⠀⠀⡾⠁⢸⠇⠀⠀⠀⠀⠀⠀⢠⡏⠈⠻⣷⡀⢹⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠏⢹⣧⣨⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⢰⡏⠀⠀⣻⠀⣼⠀⢦⡀⠀⠀⠀⠀⢸⡇⠀⠀⣿⣧⠀⠀⠀⠀⣀⣀⣀⣀⡀⣀⣀⠀⠀⠀⠀⠀⢰⢿⣀⣿⡟⠁⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠼⣷⠈⢿⡄⠀⢿⣦⣿⠀⠀⢣⡀⠀⠀⠀⠀⠱⠄⣴⡿⠁⠀⠛⠻⣟⠓⠒⠲⠤⠭⠥⠬⢳⣤⠀⠀⢠⡏⣀⣿⡿⣁⠞⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⣠⠞⠉⠀⣀⡿⠀⠀⢹⡄⡼⠳⣍⠳⣄⡀⠙⢦⡀⠀⠀⠀⣾⠋⠀⠀⠀⠀⠀⠈⠳⢦⣄⣀⣀⣀⡴⠋⠀⠀⢀⣿⣱⠟⡝⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢀⡞⢡⠆⢠⠚⠉⠀⠀⢀⡌⣱⠃⠀⠈⠑⢮⡝⢶⣬⠛⢦⣄⠀⠙⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⠀⠀⠀⢀⡾⠏⡏⠀⠆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢸⠀⢸⠀⠸⣄⣀⡀⣠⡾⢱⠏⠀⠀⠀⠀⠀⠈⠳⢯⡻⣶⡉⠳⢦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠟⠁⠀⠹⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠈⣧⡘⢆⡀⠀⢠⣾⣏⣀⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠶⣝⢷⡄⠈⠙⠻⢶⣤⣀⣀⠀⠀⠀⠀⠀⢀⣠⠟⠁⠀⠀⠀⠀⠹⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣰⠞⠛⠛⠛⠉⣉⣤⣾⠿⠛⠋⢿⣦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠹⣆⠀⠀⢀⡼⣻⡟⠛⠛⠛⠛⠛⣏⠁⠀⠀⠀⠀⠀⠀⠀⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢰⠃⣀⣠⣴⡾⠛⠋⠉⠀⠀⠀⠀⠀⠹⣷⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣧⢻⠀⢀⡾⣱⠋⠀⠀⠀⠀⠀⠀⣟⠛⠶⣦⣄⡀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⣠⣴⡿⠟⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠸⡆⣼⢱⠋⠀⠀⠀⠀⠀⠀⢀⡏⢷⡄⠀⠉⠉⠛⠒⠲⠶⣤⣤⣤⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀
+⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣦⡀⠀⠀⠀⠀⠀⠀⢸⡇⡇⣿⡟⠀⠀⠀⠀⠀⢀⣰⠟⠁⢀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠿⢶⣦⣀⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠦⣀⠀⠀⠀⠀⠘⡇⣇⣿⡇⠀⠀⠀⣠⡴⠛⠁⠀⢀⡼⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⣀⠀⡀⠉⠛⠷⣦
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠑⠂⠀⠀⠀⣿⣿⣿⠁⠀⠴⠚⢁⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣍⣍⣿⣬⣅⣉⣁⣛⣀⣹⣉⣉⣹*/
+        private void SpawnAllPiecesForShortCastle()
         {
             var chessPieces = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
 
@@ -382,14 +416,21 @@ namespace Managers
             chessPieces[0, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
             chessPieces[0, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
             chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.White);
-            for (int i = 0; i < TileManager.TileCountX; i++)
+            for (int i = 0; i < 3; i++)
             {
                 chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
             }
+            for (int i = 4; i < TileManager.TileCountX; i++)
+            {
+                chessPieces[1, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            }
+            chessPieces[2, 3] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.White);
+            chessPieces[2, 0] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.White);
+            chessPieces[2, 4] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.White);
 
             //black team
             chessPieces[7, 0] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
-            chessPieces[7, 1] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
+            chessPieces[5, 0] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 2] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
             chessPieces[7, 3] = SpawnSinglePiece(ChessPieceType.King, Shared.TeamType.Black);
             MovementManager.SetKing(chessPieces[7, 3]);
@@ -397,10 +438,17 @@ namespace Managers
             chessPieces[7, 5] = SpawnSinglePiece(ChessPieceType.Bishop, Shared.TeamType.Black);
             chessPieces[7, 6] = SpawnSinglePiece(ChessPieceType.Knight, Shared.TeamType.Black);
             chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, Shared.TeamType.Black);
-            for (int i = 0; i < TileManager.TileCountX; i++)
+            for (int i = 0; i < 3; i++)
             {
                 chessPieces[6, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
             }
+            for (int i = 4; i < 6; i++)
+            {
+                chessPieces[6, i] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            }
+            chessPieces[6, 7] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[5, 3] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
+            chessPieces[4, 6] = SpawnSinglePiece(ChessPieceType.Pawn, Shared.TeamType.Black);
 
             MovementManager.ChessPieces = chessPieces;
         }
@@ -474,8 +522,6 @@ namespace Managers
 
         public ChessPiece[,] DeepCopyBoard(ChessPiece[,] boardToCopy)
         {
-            var startTime = Time.realtimeSinceStartup;
-            
             var copyGo = new GameObject();
             var copyBoard = new ChessPiece[TileManager.TileCountX, TileManager.TileCountY];
             var currentBoard = boardToCopy;
@@ -505,7 +551,6 @@ namespace Managers
                 }
             }
 
-            Debug.Log("Deep Copy Board Time " + (Time.realtimeSinceStartup - startTime));
             return copyBoard;
         }
         

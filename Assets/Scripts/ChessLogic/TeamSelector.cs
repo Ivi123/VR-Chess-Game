@@ -45,8 +45,8 @@ public class TeamSelector : MonoBehaviour
         gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.Promotion);
     }
     
-    public void SelectTeamForLongCastle()
+    public void SelectTeamForShortCastle()
     {
-        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.LongCastle);
+        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.ShortCastle);
     }
 }

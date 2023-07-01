@@ -365,9 +365,8 @@ namespace Managers
             {
                 piecesMovedTwoTurnsAgo = GameManager.History[^2].PiecesMovedInThisTurn;
             }
-            catch (Exception e)
+            catch
             {
-                Debug.Log(e.Message);
                 return;
             }
 
@@ -424,8 +423,6 @@ namespace Managers
         public void GenerateAllMoves(Turn lastTurn, Player player, ChessPiece[,] board, Tile[,] tiles,
             List<ChessPiece> whiteTeam, List<ChessPiece> blackTeam)
         {
-            var startTime = Time.realtimeSinceStartup;
-            
             foreach (var tile in tiles)
                 tile.ResetAttackStatus();
 
@@ -443,7 +440,6 @@ namespace Managers
 
             foreach (var tile in tiles)
                 tile.DetermineAttackStatus();
-            Debug.Log("Generation Time: " + (Time.realtimeSinceStartup - startTime));
         }
 
         public void EvaluateKingStatus(Tile[,] tiles, King king)
