@@ -57,7 +57,7 @@ namespace Managers
 
             if (mockTeamSelection)
             {
-                SelectTeam(mockTeamType, transform.position, Shared.ChessboardConfig.Normal);
+                SelectTeam(mockTeamType, transform.position, transform.rotation, Shared.ChessboardConfig.Normal);
             }
         }
 
@@ -89,30 +89,7 @@ namespace Managers
                     {
                         // ignored
                     }
-
-                    /*var allMovablePieces = CurrentPlayer.Pieces.FindAll(p => p.Moves.Count != 0).ToList();
-                    if (allMovablePieces.Count != 0)
-                    {
-                        var chessPieceToMove = allMovablePieces.First();
-                        var moveToMake = chessPieceToMove.Moves.First();
-                        var moveToTile = tileManager.Tiles[moveToMake.Coords.x, moveToMake.Coords.y];
-            
-                        moveToTile.IsAvailableTile = moveToMake.Type is Shared.MoveType.Normal or Shared.MoveType.Promotion or Shared.MoveType.LongCastle
-                            or Shared.MoveType.ShortCastle;
-                        moveToTile.IsAttackTile = moveToMake.Type is Shared.MoveType.Attack or Shared.MoveType.AttackPromotion
-                            or Shared.MoveType.EnPassant;
-                        moveToTile.IsSpecialTile = moveToMake.Type is Shared.MoveType.Promotion or Shared.MoveType.AttackPromotion
-                            or Shared.MoveType.ShortCastle or Shared.MoveType.LongCastle or Shared.MoveType.EnPassant;
-            
-                        var turn = movementManager.MakeMove(movementManager.ChessPieces, chessPieceToMove, moveToTile, false);
-
-                        moveToTile.IsAvailableTile = false;
-                        moveToTile.IsAttackTile = false;
-                        moveToTile.IsSpecialTile = false;
                     
-                        AIPlayer.HasMoved = true;
-                        AdvanceTurn(turn);   
-                    }*/
                     StartCoroutine(AITurn());
                 }
             }
@@ -138,6 +115,11 @@ namespace Managers
                 AIPlayer.Pieces = movementManager.BlackPieces.Select(piece => piece.GetComponent<ChessPiece>())
                     .ToList();
                 HumanPlayer.EnablePieces();
+                
+                movementManager.GenerateAllMoves(null, CurrentPlayer, movementManager.ChessPieces, tileManager.Tiles, HumanPlayer.Pieces,
+                    AIPlayer.Pieces);
+                movementManager.EliminateInvalidMoves(movementManager.ChessPieces, tileManager.Tiles,
+                    CurrentPlayer.Team);
             }
             else
             {
@@ -154,14 +136,10 @@ namespace Managers
             
             HumanPlayer.InitPieces();
             AIPlayer.InitPieces();
-
-            /*
-            if (!AIPlayer.IsMyTurn) return;
-            StartCoroutine(AITurn());
-            CurrentPlayer.HasMoved = true;*/
         }
 
-        public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition, Shared.ChessboardConfig chessboardConfig)
+        public void SelectTeam(Shared.TeamType selectedTeam, Vector3 selectorPosition, Quaternion selectorRotation,
+            Shared.ChessboardConfig chessboardConfig)
         {
             HumanPlayer.Team = selectedTeam;
             AIPlayer.Team = 
@@ -170,6 +148,9 @@ namespace Managers
                     : Shared.TeamType.White;
 
             StartGame(chessboardConfig);
+            var rotation = selectedTeam is Shared.TeamType.White
+                ? Quaternion.Euler(0, 41, 0)
+                : Quaternion.Euler(0, 0, 0); 
             SetPlayer(selectorPosition);
 
             foreach (var teamSelector in teamSelectors)
@@ -338,7 +319,10 @@ namespace Managers
                         
                         alpha = Math.Max(alpha, bestEval);
                         if (bestEval >= beta)
+                        {
+                            CleanUpSearchBoard(board, tiles);
                             return alpha;
+                        }
                     }
                 }
             }
@@ -369,7 +353,10 @@ namespace Managers
 
                         beta = Math.Min(beta, bestEval);
                         if (bestEval <= alpha)
+                        {
+                            CleanUpSearchBoard(board, tiles);
                             return beta;
+                        }
                     }
                 }
                 

@@ -22,31 +22,36 @@ public class TeamSelector : MonoBehaviour
 
     public void SelectTeam()
     {
-        gameManager.SelectTeam(team, transform.position, Shared.ChessboardConfig.Normal);
+        gameManager.SelectTeam(team, transform.position, transform.rotation, Shared.ChessboardConfig.Normal);
     }
     
     public void SelectTeamForVictory()
     {
-        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.Victory);
+        var go = whiteTeamSelector.gameObject;
+        gameManager.SelectTeam(team, go.transform.position, go.transform.rotation, Shared.ChessboardConfig.Victory);
     }
     
     public void SelectTeamForDefeat()
     {
-        gameManager.SelectTeam(Shared.TeamType.Black, blackTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.Defeat);
+        gameManager.SelectTeam(Shared.TeamType.Black, blackTeamSelector.gameObject.transform.position,
+            blackTeamSelector.gameObject.transform.rotation, Shared.ChessboardConfig.Defeat);
     }
     
     public void SelectTeamForDraw()
     {
-        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.Draw);
+        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position,
+            whiteTeamSelector.gameObject.transform.rotation, Shared.ChessboardConfig.Draw);
     }
     
     public void SelectTeamForProm()
     {
-        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.Promotion);
+        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position,
+            whiteTeamSelector.gameObject.transform.rotation, Shared.ChessboardConfig.Promotion);
     }
     
     public void SelectTeamForShortCastle()
     {
-        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position, Shared.ChessboardConfig.ShortCastle);
+        gameManager.SelectTeam(team, whiteTeamSelector.gameObject.transform.position,
+            whiteTeamSelector.gameObject.transform.rotation, Shared.ChessboardConfig.ShortCastle);
     }
 }
