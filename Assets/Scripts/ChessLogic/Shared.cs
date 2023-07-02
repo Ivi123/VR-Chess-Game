@@ -75,6 +75,18 @@ namespace ChessLogic
             Continue
         }
         
+        public enum ChessboardConfig
+        {
+            Normal,
+            Victory,
+            Defeat,
+            Draw,
+            ShortCastle,
+            LongCastle,
+            EnPassant,
+            Promotion
+        }
+        
         public static List<Move> GeneratePossibleMovesBasedOnXAndYStep(ChessPiece[,] board, Tile[,] tiles, ChessPiece chessPiece, int stepX, int stepY)
         {
             List<Move> possibleMoves = new();
@@ -91,11 +103,10 @@ namespace ChessLogic
                 var occupationType = chessPiece.MovementManager.CalculateSpaceOccupation(board, possibleMove, chessPiece.team);
 
                 if (occupationType is TileOccupiedBy.EndOfTable) break;
-                if (occupationType is TileOccupiedBy.FriendlyPiece)
-                {
-                    possibleMoves.Add(new Move(possibleMove, MoveType.Normal)); 
-                    break;
-                }
+                
+                chessPiece.AddToTileAttackingPieces(tiles, possibleMove);
+                
+                if (occupationType is TileOccupiedBy.FriendlyPiece) break;
                 if (TileOccupiedBy.EnemyPiece == occupationType)
                 {
                     possibleMoves.Add(new Move(possibleMove, MoveType.Attack));
@@ -107,5 +118,6 @@ namespace ChessLogic
 
             return possibleMoves;
         }
+
     }
 }

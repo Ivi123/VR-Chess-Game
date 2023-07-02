@@ -41,6 +41,7 @@ namespace ChessPieces
             var leftOccupationStatus = MovementManager.CalculateSpaceOccupation(board, attackMoveLeft, team);
             if (leftOccupationStatus != Shared.TileOccupiedBy.EndOfTable)
             {
+                AddToTileAttackingPieces(tiles, attackMoveLeft);
                 if (leftOccupationStatus == Shared.TileOccupiedBy.EnemyPiece)
                     Moves.Add(new Move(attackMoveLeft,
                         isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
@@ -50,6 +51,7 @@ namespace ChessPieces
             var rightOccupationSpace = MovementManager.CalculateSpaceOccupation(board, attackMoveRight, team);
             if (rightOccupationSpace != Shared.TileOccupiedBy.EndOfTable)
             {
+                AddToTileAttackingPieces(tiles, attackMoveRight);
                 if (rightOccupationSpace == Shared.TileOccupiedBy.EnemyPiece)
                     Moves.Add(new Move(attackMoveRight,
                         isPromotion ? Shared.MoveType.AttackPromotion : Shared.MoveType.Attack));
@@ -105,6 +107,7 @@ namespace ChessPieces
                 
                 var specialMove = new Move(possibleEnPassantAttack[i], Shared.MoveType.EnPassant);
                 moves.Add(specialMove);
+                AddToTileAttackingPieces(tiles, possibleEnPassantAttack[i]);
             }
             
             return moves;

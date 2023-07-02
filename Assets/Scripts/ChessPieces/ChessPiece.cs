@@ -144,7 +144,7 @@ namespace ChessPieces
             return newMoves;
         }
 
-        protected void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
+        public void AddToTileAttackingPieces(Tile[,] tiles, Vector2Int coords)
         {
             var attackTile = tiles[coords.x, coords.y];
             var attackingPiecesList = team == Shared.TeamType.White

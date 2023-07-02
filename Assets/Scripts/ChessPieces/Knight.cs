@@ -45,6 +45,7 @@ namespace ChessPieces
             possibleMoves.ForEach(move =>
             {
                 var occupationType = MovementManager.CalculateSpaceOccupation(board, move, team);
+                if(occupationType != Shared.TileOccupiedBy.EndOfTable) AddToTileAttackingPieces(tiles, move);
                 switch (occupationType)
                 {
                     case Shared.TileOccupiedBy.None:
